@@ -1,0 +1,26 @@
+-- Haelt einen Bus an der roten Ampel an
+-- Inkrementiert den Bus-Zaehler fuer Busprioritaet
+
+param Kreuzung : integer, Horizontal : boolean
+
+if Horizontal = false
+    if Kreuzung_Tabelle[1, Kreuzung] = 1
+        @.stopped := true
+        Kreuzung_Tabelle[2, Kreuzung] := Kreuzung_Tabelle[2, Kreuzung] + 1
+        while Kreuzung_Tabelle[1, Kreuzung] = 1
+            wait 1s
+        end
+        Kreuzung_Tabelle[2, Kreuzung] := Kreuzung_Tabelle[2, Kreuzung] - 1
+        @.stopped := false
+    end
+else
+    if Kreuzung_Tabelle[1, Kreuzung] = 0
+        @.stopped := true
+        Kreuzung_Tabelle[3, Kreuzung] := Kreuzung_Tabelle[3, Kreuzung] + 1
+        while Kreuzung_Tabelle[1, Kreuzung] = 0
+            wait 1s
+        end
+        Kreuzung_Tabelle[3, Kreuzung] := Kreuzung_Tabelle[3, Kreuzung] - 1
+        @.stopped := false
+    end
+end

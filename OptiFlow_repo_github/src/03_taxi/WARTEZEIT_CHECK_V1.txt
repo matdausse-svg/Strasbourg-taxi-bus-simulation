@@ -1,0 +1,145 @@
+-- ============================================================
+-- WARTEZEIT_CHECK_V1
+-- Prueft alle Puffer auf BEs die zu lange warten
+-- Ruft Taxi wenn BE seit mehr als 5 Minuten wartet
+-- Ueberwacht jetzt auch Hub-Puffer (Bahnhof, Busbahnhof, Flughafen)
+-- ============================================================
+var i, n : integer
+var beAktuell : object
+var wartezeit : time
+
+while true
+    wait 60s
+
+    -- --------------------------------------------------------
+    -- POI-Puffer pruefen (Schwelle: 5 Minuten)
+    -- --------------------------------------------------------
+
+    -- Puffer_Taxi_Stadt
+    n := Puffer_Taxi_Stadt.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Stadt.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:05:00
+            TAXI_RUFEN_V1(Weg_Stadt_Puffer_Taxi)
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- Puffer_Taxi_Hotel1
+    n := Puffer_Taxi_Hotel1.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Hotel1.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:05:00
+            TAXI_RUFEN_V1(Weg_Hotel1_Puffer_Taxi)
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- Puffer_Taxi_Hotel2
+    n := Puffer_Taxi_Hotel2.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Hotel2.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:05:00
+            TAXI_RUFEN_V1(Weg_Hotel2_Puffer_Taxi)
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- Puffer_Taxi_Forum
+    n := Puffer_Taxi_Forum.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Forum.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:05:00
+            TAXI_RUFEN_V1(Weg_Forum_Puffer_Taxi)
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- Puffer_Taxi_Parlament
+    n := Puffer_Taxi_Parlament.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Parlament.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:05:00
+            TAXI_RUFEN_V1(Weg_Parlament_Puffer_Taxi)
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- --------------------------------------------------------
+    -- Hub-Puffer pruefen (Schwelle: 15 Minuten)
+    -- Wenn BEs am Bahnhof/Busbahnhof/Flughafen lange warten:
+    -- Taxi von einem anderen Hub umlenken
+    -- --------------------------------------------------------
+
+    -- Puffer_Taxi_Bahnhof
+    n := Puffer_Taxi_Bahnhof.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Bahnhof.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:15:00
+            if not TaxiRuf_Busbahnhof
+                TaxiRuf_Busbahnhof      := true
+                TaxiRuf_Busbahnhof_Ziel := Weg_Bahnhof_Puffer_Taxi
+            end
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- Puffer_Taxi_Busbahnhof
+    n := Puffer_Taxi_Busbahnhof.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Busbahnhof.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:15:00
+            if not TaxiRuf_Bahnhof
+                TaxiRuf_Bahnhof      := true
+                TaxiRuf_Bahnhof_Ziel := Weg_Busbahnhof_Puffer_Taxi
+            end
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+    -- Puffer_Taxi_Flughafen
+    n := Puffer_Taxi_Flughafen.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Flughafen.BE(i)
+        wartezeit := Ereignisverwalter.absZeit - beAktuell.PufferEintrittszeit
+        if wartezeit > 0:15:00
+            if not TaxiRuf_Bahnhof
+                TaxiRuf_Bahnhof      := true
+                TaxiRuf_Bahnhof_Ziel := Weg_Flughafen_Puffer_Taxi
+            end
+            i := n + 1
+        else
+            i := i + 1
+        end
+    end
+
+end

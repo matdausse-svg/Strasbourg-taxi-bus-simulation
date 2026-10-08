@@ -1,0 +1,240 @@
+-- ============================================================
+-- TRANSPORT_WAEHLEN_V3: SZENARIO_TOURIST_V3
+-- Weist einem klassischen Touristen ein realistisches Szenario zu
+-- Szenarien:
+-- Tagesbesuch, Geschaeftsreise, Urlaub, Umstieg
+-- ============================================================
+
+param pBE : object
+
+var zeitText, stundeText, tagText : string
+var stunde, tagNr, wochentag : integer
+var zufall, hotelZufall, zielZufall, umstiegZufall : integer
+
+-- ------------------------------------------------------------
+-- Zeit und Wochentag bestimmen
+-- Format: DD.MM.YYYY HH:MM:SS
+-- Simulationsstart 05.01. = Montag, also wochentag = 0
+-- Montag=0, Dienstag=1, Mittwoch=2, Donnerstag=3,
+-- Freitag=4, Samstag=5, Sonntag=6
+-- ------------------------------------------------------------
+
+zeitText := to_str(pBE.ArrivalTime)
+stundeText := strCopy(zeitText, 12, 2)
+tagText := strCopy(zeitText, 1, 2)
+
+stunde := str_to_num(stundeText)
+tagNr := str_to_num(tagText)
+wochentag := (tagNr - 5) mod 7
+
+-- ------------------------------------------------------------
+-- Grundwerte setzen
+-- ------------------------------------------------------------
+
+if pBE.Ankunftsort = ""
+    pBE.Ankunftsort := pBE.Abfahrt
+end
+
+pBE.Abfahrtsort := pBE.Ankunftsort
+pBE.HotelZiel := ""
+
+zufall := round(z_gleich(71, 1, 100))
+hotelZufall := round(z_gleich(72, 1, 100))
+zielZufall := round(z_gleich(73, 1, 100))
+umstiegZufall := round(z_gleich(74, 1, 100))
+
+-- ------------------------------------------------------------
+-- Sonderfall: Umstieg
+-- Flughafen -> Bahnhof oder Bahnhof -> Flughafen
+-- Busbahnhof bekommt vorerst keinen Umstieg
+-- ------------------------------------------------------------
+
+if pBE.Ankunftsort = "Flughafen"
+    if umstiegZufall <= 10
+        pBE.Szenario := "Umstieg"
+        pBE.ReisePhase := "Umstieg"
+        pBE.Abfahrtsort := "Bahnhof"
+        pBE.Ziel := "Bahnhof"
+        return
+    end
+elseif pBE.Ankunftsort = "Bahnhof"
+    if umstiegZufall <= 6
+        pBE.Szenario := "Umstieg"
+        pBE.ReisePhase := "Umstieg"
+        pBE.Abfahrtsort := "Flughafen"
+        pBE.Ziel := "Flughafen"
+        return
+    end
+end
+
+-- ------------------------------------------------------------
+-- Szenarioauswahl nach Uhrzeit und Gruppengroesse
+-- ------------------------------------------------------------
+
+-- Nacht: kein Tagesbesuch
+if stunde < 5 or stunde >= 23
+
+    if pBE.Gruppe_Groesse = 1
+        if zufall <= 70
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    elseif pBE.Gruppe_Groesse <= 4
+        if zufall <= 30
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    else
+        if zufall <= 10
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    end
+
+-- Morgen: Tagesbesuch haeufig
+elseif stunde >= 5 and stunde < 10
+
+    if pBE.Gruppe_Groesse = 1
+        if zufall <= 60
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 85
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    elseif pBE.Gruppe_Groesse <= 4
+        if zufall <= 50
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 65
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    else
+        if zufall <= 25
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 35
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    end
+
+-- Tag: normale Verteilung
+elseif stunde >= 10 and stunde < 17
+
+    if pBE.Gruppe_Groesse = 1
+        if zufall <= 45
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 85
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    elseif pBE.Gruppe_Groesse <= 4
+        if zufall <= 40
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 60
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    else
+        if zufall <= 20
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 30
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    end
+
+-- Abend: Hotel wahrscheinlicher
+else
+
+    if pBE.Gruppe_Groesse = 1
+        if zufall <= 15
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 75
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    elseif pBE.Gruppe_Groesse <= 4
+        if zufall <= 10
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 35
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    else
+        if zufall <= 5
+            pBE.Szenario := "Tagesbesuch"
+        elseif zufall <= 15
+            pBE.Szenario := "Geschaeftsreise"
+        else
+            pBE.Szenario := "Urlaub"
+        end
+    end
+end
+
+-- ------------------------------------------------------------
+-- Erste Reisephase und erstes Ziel aus Szenario ableiten
+-- ------------------------------------------------------------
+
+if pBE.Szenario = "Tagesbesuch"
+
+    -- Tagesbesuch: Stadt hauptsaechlich, Forum teilweise,
+    -- Parlament nur Freitag/Samstag und nur Minderheit
+    if (wochentag = 4) or (wochentag = 5)
+        if zielZufall <= 70
+            pBE.Ziel := "Stadt"
+            pBE.ReisePhase := "ZurStadt"
+        elseif zielZufall <= 90
+            pBE.Ziel := "Forum"
+            pBE.ReisePhase := "ZumForum"
+        else
+            pBE.Ziel := "Parlament"
+            pBE.ReisePhase := "ZumParlament"
+        end
+    else
+        if zielZufall <= 75
+            pBE.Ziel := "Stadt"
+            pBE.ReisePhase := "ZurStadt"
+        else
+            pBE.Ziel := "Forum"
+            pBE.ReisePhase := "ZumForum"
+        end
+    end
+
+elseif pBE.Szenario = "Geschaeftsreise"
+
+    -- Geschaeftsreise startet immer mit einer Nacht im Hotel
+    pBE.ReisePhase := "ZumHotel"
+
+    if hotelZufall <= 50
+        pBE.Ziel := "Hotel1"
+        pBE.HotelZiel := "Hotel1"
+    else
+        pBE.Ziel := "Hotel2"
+        pBE.HotelZiel := "Hotel2"
+    end
+
+elseif pBE.Szenario = "Urlaub"
+
+    -- Urlaub startet im Hotel, danach 3-4 Tage Besuchslogik
+    pBE.ReisePhase := "ZumHotel"
+
+    if hotelZufall <= 50
+        pBE.Ziel := "Hotel1"
+        pBE.HotelZiel := "Hotel1"
+    else
+        pBE.Ziel := "Hotel2"
+        pBE.HotelZiel := "Hotel2"
+    end
+
+end

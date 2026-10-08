@@ -1,0 +1,103 @@
+-- ============================================================
+-- ENTLADEN_TAXI_V2
+-- Entlaedt alle BEs im Ziel-Lager oder in der gemeinsamen Senke
+-- Entscheidet danach die naechste Fahrt des Fahrzeugs
+-- Erweiterte Version fuer touristische Orte + Senke_Allgemein
+-- ============================================================
+
+var zielVorAbladen : object
+var anzahl, i : integer
+var beAktuell : object
+
+
+zielVorAbladen := @.Ziel_Lager
+
+if zielVorAbladen = void
+    return
+end
+
+-- ------------------------------------------------------------
+-- Alle BEs ins Ziel-Lager / in die Senke umladen
+-- ------------------------------------------------------------
+
+if @.belegt
+    anzahl := @.numMU
+    i := 1
+    while i <= anzahl
+        beAktuell := @.BE(1)
+        beAktuell.umlagern(zielVorAbladen)
+        if zielVorAbladen = Senke_Allgemein
+            TRACKING_UPDATE_BE_V1(beAktuell, beAktuell.Ziel, "beendet")
+            wait 1s
+        else
+            TRACKING_UPDATE_BE_V1(beAktuell, "", "aus Taxi ausgestiegen")
+            wait 1s
+        end
+    i := i + 1
+end
+end
+
+-- Sicherheitsfall: falls noch etwas im Fahrzeug ist
+if @.belegt
+    @.Zielort := Weg_Bahnhof_Puffer_Taxi
+    return
+end
+
+-- Ziel-Lager zuruecksetzen
+@.Ziel_Lager := void
+
+-- ------------------------------------------------------------
+-- Naechste Fahrt bestimmen
+-- Erst lokaler Puffer, sonst globale Pufferwahl
+-- ------------------------------------------------------------
+
+if zielVorAbladen = Lager_Stadt
+
+    if Puffer_Taxi_Stadt.belegt
+        @.Zielort := Weg_Stadt_Puffer_Taxi
+    else
+        PUFFER_WAHLEN_V2
+    end
+
+elseif zielVorAbladen = Lager_Hotel1
+
+    if Puffer_Taxi_Hotel1.belegt
+        @.Zielort := Weg_Hotel1_Puffer_Taxi
+    else
+        PUFFER_WAHLEN_V2
+    end
+
+elseif zielVorAbladen = Lager_Hotel2
+
+    if Puffer_Taxi_Hotel2.belegt
+        @.Zielort := Weg_Hotel2_Puffer_Taxi
+    else
+        PUFFER_WAHLEN_V2
+    end
+
+elseif zielVorAbladen = Lager_Forum
+
+    if Puffer_Taxi_Forum.belegt
+        @.Zielort := Weg_Forum_Puffer_Taxi
+    else
+        PUFFER_WAHLEN_V2
+    end
+
+elseif zielVorAbladen = Lager_Parlament
+
+    if Puffer_Taxi_Parlament.belegt
+        @.Zielort := Weg_Parlament_Puffer_Taxi
+    else
+        PUFFER_WAHLEN_V2
+    end
+
+else
+
+    -- Ici on tombe notamment quand zielVorAbladen = Senke_Allgemein.
+    -- Le taxi a fini de deposer le BE et cherche une nouvelle course.
+    PUFFER_WAHLEN_V2
+
+end
+
+-- Rueckfahrt nicht mehr fest erzwingen
+@.Rueckfahrt := void

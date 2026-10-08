@@ -1,0 +1,30 @@
+-- ============================================================
+-- ZIEL_LESEN_V1
+-- Liest oder berechnet den ZielZufall fuer eine Gruppe
+-- Speichert das Ergebnis in ZielAktuell_Global
+-- ============================================================
+param pGruppeNummer : integer, pPhase : integer
+
+var zeile, i, suchSchluessel : integer
+var gefunden : boolean
+
+suchSchluessel := pGruppeNummer * 10 + pPhase
+
+gefunden := false
+i := 1
+while i <= Tabelle_Ziel_Gruppe.YDim
+    if Tabelle_Ziel_Gruppe[1, i] = suchSchluessel
+        ZielAktuell_Global := Tabelle_Ziel_Gruppe[2, i]
+        gefunden := true
+        i := Tabelle_Ziel_Gruppe.YDim + 1
+    else
+        i := i + 1
+    end
+end
+
+if not gefunden
+    ZielAktuell_Global := round(z_gleich(pGruppeNummer, 1, 100))
+    zeile := Tabelle_Ziel_Gruppe.YDim + 1
+    Tabelle_Ziel_Gruppe[1, zeile] := suchSchluessel
+    Tabelle_Ziel_Gruppe[2, zeile] := ZielAktuell_Global
+end

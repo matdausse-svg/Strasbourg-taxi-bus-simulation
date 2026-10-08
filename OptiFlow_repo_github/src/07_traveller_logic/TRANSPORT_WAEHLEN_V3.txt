@@ -1,0 +1,59 @@
+-- ============================================================
+-- TRANSPORT_WAEHLEN_V3: TRANSPORT_WAEHLEN_V3
+-- Waehlt Transportmodus fuer die naechste Fahrt eines BEs
+-- Schreibt direkt in pBE.Transportmodus
+-- Modell 4: nach Kampagne, 70% Bus fuer Touristen
+-- ============================================================
+param pBE : object
+var transportZufall : integer
+
+-- Standardwert
+pBE.Transportmodus := "Taxi"
+
+-- Parlament wird immer mit Taxi angefahren
+if pBE.Ziel = "Parlament"
+    pBE.Transportmodus := "Taxi"
+    return
+end
+
+-- Europaabgeordnete fahren immer Taxi
+if pBE.Szenario = "Parlament"
+    pBE.Transportmodus := "Taxi"
+    return
+end
+
+-- Klasse FFA faehrt immer Bus
+if pBE.Szenario = "Klasse_FFA"
+    pBE.Transportmodus := "Bus"
+    return
+end
+
+-- FFA: 80% Bus
+if pBE.Szenario = "FFA"
+    TRANSPORT_LESEN_V1(pBE.Gruppe_Nummer, 8)
+    if TransportAktuell_Global = 1
+        pBE.Transportmodus := "Bus"
+    else
+        pBE.Transportmodus := "Taxi"
+    end
+    return
+end
+
+-- Umstieg: 50% Bus
+if pBE.Szenario = "Umstieg"
+    TRANSPORT_LESEN_V1(pBE.Gruppe_Nummer, 5)
+    if TransportAktuell_Global = 1
+        pBE.Transportmodus := "Bus"
+    else
+        pBE.Transportmodus := "Taxi"
+    end
+    return
+end
+
+-- Touristen klassisch: 70% Bus
+TRANSPORT_LESEN_V1(pBE.Gruppe_Nummer, 7)
+if TransportAktuell_Global = 1
+    pBE.Transportmodus := "Bus"
+else
+    pBE.Transportmodus := "Taxi"
+end

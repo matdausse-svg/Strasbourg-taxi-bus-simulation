@@ -1,0 +1,27 @@
+-- Erzeugt alle Fahrzeuge beim Start der Simulation
+
+var n : integer
+var b, t, tv : object
+
+-- Taxis und TaxiVans
+for n := 1 to 30
+    t := .Benutzerobjekte.Taxi.erzeugen(ZweispurigerWeg12, 0)
+    wait 0:20
+
+    tv := .Benutzerobjekte.TaxiVan.erzeugen(ZweispurigerWeg12, 0)
+    wait 0:20
+next
+
+-- Busse Linie Bahn
+for n := 1 to 2
+    b := .Benutzerobjekte.Bus_Bahn.erzeugen(Bus_Bahn1.B, 0)
+    b.setRoute([Bus_Bahn2.B, Bus_Bahn3.B, Bus_Bahn4.B, Bus_Bahn5_Bus_Stadt5.B, Bus_Bahn6_Bus_Stadt6.B, Bus_Bahn7_Bus_Stadt7.B])
+    wait 1:00
+next
+
+-- Busse Linie Stadt
+for n := 1 to 2
+    b := .Benutzerobjekte.Bus_Stadt.erzeugen(Bus_Stadt1.B, 0)
+    b.setRoute([Bus_Stadt2.B, Bus_Stadt3.B, Bus_Stadt4.B, Bus_Bahn5_Bus_Stadt5.B, Bus_Bahn6_Bus_Stadt6.B, Bus_Bahn7_Bus_Stadt7.B])
+    wait 1:00
+next

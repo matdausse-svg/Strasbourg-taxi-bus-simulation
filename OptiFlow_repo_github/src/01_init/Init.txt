@@ -1,0 +1,45 @@
+-- Initialisierung: Ampeln, Fahrzeuge und Lieferlisten
+
+var i : integer
+var b, t, tv : object
+
+-- Globale Zaehler zuruecksetzen
+GruppenZaehler_Global := 0
+WechselZaehler        := 0
+
+-- KPI Wartezeit zuruecksetzen
+Anzahl         := 0
+WartezeitMin   := 0
+WartezeitMax   := 0
+WartezeitMittel := 0
+WartezeitErgebnis.loeschen
+
+-- Tracking-Tabelle initialisieren
+TRACKING_INIT_TABLE_V1
+
+-- Lieferlisten aufbauen (7 Tage)
+LieferlisteAufbauen(Fahrplan_Bahnhof,    1, 7)
+LieferlisteAufbauen(Fahrplan_Flughafen,  2, 7)
+LieferlisteAufbauen(Fahrplan_Busbahnhof, 3, 7)
+
+--Init Tabelle dauer
+Tabelle_Dauer_Gruppe.loeschen
+
+--Init Tabelle Transport
+Tabelle_Transport_Gruppe.loeschen
+
+--Init Tabelle ziel gruppe
+Tabelle_Ziel_Gruppe.loeschen
+
+&WARTEZEIT_CHECK_V1.executeIn(0)
+
+-- Kreuzung_Tabelle zuruecksetzen und Ampeln starten
+i := 1
+while i <= Kreuzung_Tabelle.YDim
+    Kreuzung_Tabelle[1, i] := 0
+    Kreuzung_Tabelle[2, i] := 0
+    Kreuzung_Tabelle[3, i] := 0
+    &Ampel_Steuerung.executeIn(0, i)
+    i := i + 1
+end
+Fahrzeuge_Erzeugen

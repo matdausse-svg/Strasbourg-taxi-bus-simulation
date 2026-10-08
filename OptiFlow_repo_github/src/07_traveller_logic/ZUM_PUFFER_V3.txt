@@ -1,0 +1,63 @@
+-- ============================================================
+-- ZUM_PUFFER_V3: ZUM_PUFFER_V3
+-- Schickt ein BE nach Aufenthalt zum passenden Taxi- oder Bus-Puffer
+-- Benutzt pBE.Ziel und pBE.Transportmodus
+-- ============================================================
+param pBE : object
+
+-- Sicherheit: falls kein Transportmodus gesetzt ist
+if pBE.Transportmodus = ""
+    TRANSPORT_WAEHLEN_V3(pBE)
+end
+
+-- Statistik: ArrivalTime setzen (neues Warten auf Taxi/Bus beginnt)
+pBE.ArrivalTime := Ereignisverwalter.absZeit
+
+-- ============================================================
+-- TAXI-PUFFER
+-- ============================================================
+if pBE.Transportmodus = "Taxi"
+    pBE.PufferEintrittszeit := Ereignisverwalter.absZeit
+    if pBE.AktuellerOrt = "Stadt"
+        pBE.umlagern(Puffer_Taxi_Stadt)
+    elseif pBE.AktuellerOrt = "Hotel1"
+        pBE.umlagern(Puffer_Taxi_Hotel1)
+    elseif pBE.AktuellerOrt = "Hotel2"
+        pBE.umlagern(Puffer_Taxi_Hotel2)
+    elseif pBE.AktuellerOrt = "Forum"
+        pBE.umlagern(Puffer_Taxi_Forum)
+    elseif pBE.AktuellerOrt = "Parlament"
+        pBE.umlagern(Puffer_Taxi_Parlament)
+    elseif pBE.AktuellerOrt = "Bahnhof"
+        pBE.umlagern(Puffer_Taxi_Bahnhof)
+    elseif pBE.AktuellerOrt = "Flughafen"
+        pBE.umlagern(Puffer_Taxi_Flughafen)
+    elseif pBE.AktuellerOrt = "Busbahnhof"
+        pBE.umlagern(Puffer_Taxi_Busbahnhof)
+    end
+
+-- ============================================================
+-- BUS-PUFFER
+-- ============================================================
+else
+    if pBE.AktuellerOrt = "Stadt"
+        pBE.umlagern(Puffer_Bus_Stadt)
+    elseif pBE.AktuellerOrt = "Hotel1"
+        pBE.umlagern(Puffer_Bus_Hotel1)
+    elseif pBE.AktuellerOrt = "Hotel2"
+        pBE.umlagern(Puffer_Bus_Hotel2)
+    elseif pBE.AktuellerOrt = "Forum"
+        pBE.umlagern(Puffer_Bus_Forum)
+    elseif pBE.AktuellerOrt = "Bahnhof"
+        pBE.umlagern(Puffer_Bus_Bahnhof)
+    elseif pBE.AktuellerOrt = "Flughafen"
+        pBE.umlagern(Puffer_Bus_Flughafen)
+    elseif pBE.AktuellerOrt = "Busbahnhof"
+        pBE.umlagern(Puffer_Bus_Busbahnhof)
+    elseif pBE.AktuellerOrt = "Parlament"
+        -- Kein Bus-Puffer am Parlament vorgesehen: fallback Taxi
+        pBE.Transportmodus := "Taxi"
+        pBE.PufferEintrittszeit := Ereignisverwalter.absZeit
+        pBE.umlagern(Puffer_Taxi_Parlament)
+    end
+end

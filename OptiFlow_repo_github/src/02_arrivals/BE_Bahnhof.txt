@@ -1,0 +1,473 @@
+-- ============================================================
+-- TRACKING_INIT_TABLE_V1: BE_Bahnhof
+-- Aufgerufen vom Ankunft_Trigger beim Verlassen des Bahnhofs
+-- Erzeugt Touristen, Europaabgeordnete, FFA-Studenten
+-- und die Klasse im entsprechenden Puffer
+-- ============================================================
+
+-- --- Variablendeklaration ---
+var rest, groesse, typ, k, stunde    : integer
+var mittelwert, streuung             : integer
+var schwelleE, schwelleK             : integer
+var zielZufall, transportZufall      : integer
+var abgAnzahl, tagNr                 : integer
+var wochentag, studentAnzahl         : integer
+var neuesBE                          : object
+var r                                : real
+var zeitStr, profil, zielAktuell     : string
+
+-- --- Aktuelle Simulationszeit und Wochentag ermitteln ---
+-- zeitStr:   absolute Simulationszeit als String (Format: DD.MM.YYYY HH:MM:SS)
+-- stunde:    aktuelle Stunde (Position 12-13 im String)
+-- tagNr:     Kalendertag (Position 1-2 im String)
+-- wochentag: 0=Montag bis 6=Sonntag (Simulation startet am 05.01. = Montag)
+zeitStr   := to_str(Ereignisverwalter.absZeit)
+stunde    := str_to_num(strCopy(zeitStr, 12, 2))
+tagNr     := str_to_num(strCopy(zeitStr, 1, 2))
+wochentag := (tagNr - 5) mod 7
+
+-- --- Tagesprofil Bahnhof ---
+-- Bestimmt Mittelwert/Streuung der Passagieranzahl und
+-- die Schwellenwerte fuer die BE-Typ-Verteilung je Tageszeit
+if (stunde >= 6) and (stunde < 10)
+    mittelwert := 35
+    streuung   := 10
+    schwelleE  := 88   -- bis 88% -> Einzeltourist
+    schwelleK  := 98   -- bis 98% -> Gruppe 2-4
+    profil     := "Frueher Berufsverkehr"
+elseif (stunde >= 10) and (stunde < 16)
+    mittelwert := 18
+    streuung   := 6
+    schwelleE  := 55
+    schwelleK  := 88
+    profil     := "Taktverkehr (gemischt)"
+elseif (stunde >= 16) and (stunde < 20)
+    mittelwert := 32
+    streuung   := 9
+    schwelleE  := 82
+    schwelleK  := 96
+    profil     := "Abendlicher Berufsverkehr"
+else
+    mittelwert := 8
+    streuung   := 3
+    schwelleE  := 70
+    schwelleK  := 92
+    profil     := "Ruhephase"
+end
+
+-- --- Gesamtanzahl der Passagiere dieses Zuges ---
+-- Normalverteilung um Mittelwert mit gegebener Streuung (Seed 99)
+rest := round(z_normal(z_gleich(99, 1, 1000), mittelwert, streuung))
+if rest < 1 then rest := 1 end
+
+-- --- Statusvariablen aktualisieren ---
+LetzterZug_Zeit       := zeitStr
+LetzterZug_Passagiere := rest
+LetzterZug_Profil     := profil
+
+print("Zug eingetroffen mit " + to_str(rest) + " Passagieren um " + zeitStr + " (" + profil + ")")
+
+-- ============================================================
+-- EUROPAABGEORDNETE
+-- Nur Montag bis Freitag (wochentag=0-4), 08:00-16:00 Uhr
+-- Alle nehmen ein Taxi (kein umlagern), Ziel immer "Parlament"
+-- Seed 95 fuer Anzahl
+-- ============================================================
+if (wochentag >= 0) and (wochentag <= 4) and (stunde >= 8) and (stunde < 16)
+    abgAnzahl := round(z_normal(z_gleich(95, 1, 1000), 17, 4))
+    if abgAnzahl < 0 then abgAnzahl := 0 end
+
+    k := 1
+    while k <= abgAnzahl
+        GruppenZaehler_Global := GruppenZaehler_Global + 1
+
+        neuesBE := .Benutzerobjekte.Europaabgeordneter.erzeugen(Puffer_Taxi_Bahnhof)
+        neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+        neuesBE.Gruppe_Groesse := 1
+        neuesBE.Ziel           := "Parlament"
+        neuesBE.Abfahrt        := "Bahnhof"
+        neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+        neuesBE.Ankunftsort    := "Bahnhof"
+        neuesBE.Abfahrtsort    := "Bahnhof"
+        neuesBE.Szenario       := "Parlament"
+        neuesBE.ReisePhase     := "ZumParlament"
+        neuesBE.HotelZiel      := ""
+        neuesBE.Transportmodus := "Taxi"
+
+        TRACKING_INIT_BE_V1(neuesBE)
+
+        k := k + 1
+        wait 1
+    end
+
+    print("Europaabgeordnete per Zug: " + to_str(abgAnzahl))
+end
+
+-- ============================================================
+-- FORUM FRANCO-ALLEMAND (FFA)
+-- Sonderereignis: Do ab 15h, Fr+Sa ganztags
+-- Studenten/Schueler kommen per Zug, Ziel immer "Forum"
+-- 80% nehmen Stadtbus, 20% nehmen Taxi
+-- Klasse_FFA: 20 Personen, einmalig Do ab 17h, 100% Bus
+-- ============================================================
+
+-- --- FFA: Donnerstag ab 15:00 Uhr ---
+if wochentag = 3 and stunde >= 15
+
+    -- Weniger Studenten am Donnerstag (Mittelwert 4, Seed 93)
+    studentAnzahl := round(z_normal(z_gleich(93, 1, 1000), 4, 1))
+    if studentAnzahl < 0 then studentAnzahl := 0 end
+
+    k := 1
+    while k <= studentAnzahl
+        GruppenZaehler_Global := GruppenZaehler_Global + 1
+
+        neuesBE := .Benutzerobjekte.Schueler_Student.erzeugen(Puffer_Taxi_Bahnhof)
+
+        neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+        neuesBE.Gruppe_Groesse := 1
+        neuesBE.Ziel           := "Forum"
+        neuesBE.Abfahrt        := "Bahnhof"
+        neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+        -- Neue Reise-/Tracking-Attribute
+        neuesBE.Ankunftsort    := "Bahnhof"
+        neuesBE.Abfahrtsort    := "Bahnhof"
+        neuesBE.Szenario       := "FFA"
+        neuesBE.ReisePhase     := "ZumForum"
+        neuesBE.HotelZiel      := ""
+
+        -- 80% Bus, 20% Taxi
+        transportZufall := round(z_gleich(83, 1, 10))
+        if transportZufall <= 8
+            neuesBE.Transportmodus := "Bus"
+        else
+            neuesBE.Transportmodus := "Taxi"
+        end
+
+        -- Tracking-Zeile anlegen
+        TRACKING_INIT_BE_V1(neuesBE)
+
+        -- Bei Buswahl in den Bus-Puffer umlagern
+        if transportZufall <= 8
+            neuesBE.umlagern(Puffer_Bus_Bahnhof)
+        end
+
+        k := k + 1
+        wait 1
+    end
+
+    print("FFA Studenten per Zug (Do): " + to_str(studentAnzahl) + " um " + zeitStr)
+
+    -- --- Klasse FFA: einmalig Donnerstag ab 17:00 Uhr, 100% Bus ---
+    -- Flag Klasse_Angekommen verhindert mehrfaches Spawnen
+    if stunde >= 17 and (not Klasse_Angekommen)
+        Klasse_Angekommen := true
+
+        k := 1
+        while k <= 20
+            GruppenZaehler_Global := GruppenZaehler_Global + 1
+
+            neuesBE := .Benutzerobjekte.Klasse_FFA.erzeugen(Puffer_Taxi_Bahnhof)
+
+            neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+            neuesBE.Gruppe_Groesse := 1
+            neuesBE.Ziel           := "Forum"
+            neuesBE.Abfahrt        := "Bahnhof"
+            neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+            -- Neue Reise-/Tracking-Attribute
+            neuesBE.Ankunftsort    := "Bahnhof"
+            neuesBE.Abfahrtsort    := "Bahnhof"
+            neuesBE.Szenario       := "Klasse_FFA"
+            neuesBE.ReisePhase     := "ZumForum"
+            neuesBE.HotelZiel      := ""
+            neuesBE.Transportmodus := "Bus"
+
+            -- Tracking-Zeile anlegen
+            TRACKING_INIT_BE_V1(neuesBE)
+
+            -- Klasse faehrt immer mit dem Bus
+            neuesBE.umlagern(Puffer_Bus_Bahnhof)
+
+            k := k + 1
+            wait 1
+        end
+
+        print("Klasse FFA angekommen (20 Personen) um " + zeitStr)
+    end
+
+-- --- FFA: Freitag und Samstag ganztags ---
+elseif (wochentag = 4) or (wochentag = 5)
+
+    -- Mehr Studenten Fr+Sa (Mittelwert 7, gleicher Seed 93)
+    studentAnzahl := round(z_normal(z_gleich(93, 1, 1000), 7, 2))
+    if studentAnzahl < 0 then studentAnzahl := 0 end
+
+    k := 1
+    while k <= studentAnzahl
+        GruppenZaehler_Global := GruppenZaehler_Global + 1
+
+        neuesBE := .Benutzerobjekte.Schueler_Student.erzeugen(Puffer_Taxi_Bahnhof)
+
+        neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+        neuesBE.Gruppe_Groesse := 1
+        neuesBE.Ziel           := "Forum"
+        neuesBE.Abfahrt        := "Bahnhof"
+        neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+        -- Neue Reise-/Tracking-Attribute
+        neuesBE.Ankunftsort    := "Bahnhof"
+        neuesBE.Abfahrtsort    := "Bahnhof"
+        neuesBE.Szenario       := "FFA"
+        neuesBE.ReisePhase     := "ZumForum"
+        neuesBE.HotelZiel      := ""
+
+        -- 80% Bus, 20% Taxi
+        transportZufall := round(z_gleich(83, 1, 10))
+        if transportZufall <= 8
+            neuesBE.Transportmodus := "Bus"
+        else
+            neuesBE.Transportmodus := "Taxi"
+        end
+
+        -- Tracking-Zeile anlegen
+        TRACKING_INIT_BE_V1(neuesBE)
+
+        -- Bei Buswahl in den Bus-Puffer umlagern
+        if transportZufall <= 8
+            neuesBE.umlagern(Puffer_Bus_Bahnhof)
+        end
+
+        k := k + 1
+        wait 1
+    end
+
+    print("FFA Studenten per Zug (Fr/Sa): " + to_str(studentAnzahl) + " um " + zeitStr)
+
+end
+
+-- ============================================================
+-- TOURISTEN (Standardlogik, unveraendert vom Original)
+-- Jede Gruppe erhaelt ein zufaelliges Ziel und wird per
+-- Taxi (Puffer_Taxi_Bahnhof) oder Stadtbus (Puffer_Bus_Bahnhof)
+-- weitergeleitet. Parlament-Besucher fahren nur per Taxi.
+-- ============================================================
+while rest > 0
+
+    -- Neue Gruppe: Zaehler erhoehen
+    GruppenZaehler_Global := GruppenZaehler_Global + 1
+
+    -- --- BE-Typ bestimmen anhand Zufallszahl und Tagesschwellen (Seed 98) ---
+    r := z_gleich(z_gleich(98, 1, 1000), 0, 100)
+
+    if r < schwelleE
+        typ := 1   -- Einzeltourist
+    elseif r < schwelleK
+        typ := 2   -- Gruppe 2-4
+    else
+        typ := 3   -- Gruppe 5-6
+    end
+
+    -- ============================================================
+    -- TYP 1: EINZELTOURIST
+    -- ============================================================
+    if typ = 1
+
+        groesse := 1
+
+        neuesBE := .Benutzerobjekte.Einzeltourist.erzeugen(Puffer_Taxi_Bahnhof)
+
+        neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+        neuesBE.Gruppe_Groesse := groesse
+        neuesBE.Abfahrt        := "Bahnhof"
+        neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+        neuesBE.Ankunftsort    := "Bahnhof"
+        neuesBE.Abfahrtsort    := "Bahnhof"
+        neuesBE.HotelZiel      := ""
+
+        -- Szenario bestimmt Ziel, ReisePhase und HotelZiel
+        SZENARIO_TOURIST_V3(neuesBE)
+
+        -- Transportmittel bestimmen
+        transportZufall := round(z_gleich(2, 1, 10))
+
+        if transportZufall <= 7 and neuesBE.Ziel /= "Parlament"
+            neuesBE.Transportmodus := "Bus"
+        else
+            neuesBE.Transportmodus := "Taxi"
+        end
+
+        -- Tracking-Zeile anlegen
+        TRACKING_INIT_BE_V1(neuesBE)
+
+        -- Bei Buswahl in Bus-Puffer umlagern
+        if neuesBE.Transportmodus = "Bus"
+            neuesBE.umlagern(Puffer_Bus_Bahnhof)
+        end
+
+    -- ============================================================
+    -- TYP 2: GRUPPE 2-4
+    -- Wichtig: Szenario nur einmal bestimmen und dann kopieren
+    -- ============================================================
+    elseif typ = 2
+
+        groesse := round(z_gleich(z_gleich(97, 1, 1000), 2, 4))
+        if groesse < 2 then groesse := 2
+        end
+        var gruppeSzenario, gruppeReisePhase, gruppeZiel, gruppeHotelZiel : string
+        var gruppeAbfahrtsort, gruppeTransportmodus : string
+
+        -- Erstes Gruppenmitglied erzeugen
+        neuesBE := .Benutzerobjekte.Touristen_2_4.erzeugen(Puffer_Taxi_Bahnhof)
+
+        neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+        neuesBE.Gruppe_Groesse := groesse
+        neuesBE.Abfahrt        := "Bahnhof"
+        neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+        neuesBE.Ankunftsort    := "Bahnhof"
+        neuesBE.Abfahrtsort    := "Bahnhof"
+        neuesBE.HotelZiel      := ""
+
+        -- Szenario einmal fuer die ganze Gruppe bestimmen
+        SZENARIO_TOURIST_V3(neuesBE)
+
+        -- Transportmittel einmal fuer die ganze Gruppe bestimmen
+        transportZufall := round(z_gleich(2, 1, 10))
+
+        if transportZufall <= 7 and neuesBE.Ziel /= "Parlament"
+            neuesBE.Transportmodus := "Bus"
+        else
+            neuesBE.Transportmodus := "Taxi"
+        end
+
+        -- Gruppenwerte merken
+        gruppeSzenario       := neuesBE.Szenario
+        gruppeReisePhase     := neuesBE.ReisePhase
+        gruppeZiel           := neuesBE.Ziel
+        gruppeHotelZiel      := neuesBE.HotelZiel
+        gruppeAbfahrtsort    := neuesBE.Abfahrtsort
+        gruppeTransportmodus := neuesBE.Transportmodus
+
+        TRACKING_INIT_BE_V1(neuesBE)
+
+        if neuesBE.Transportmodus = "Bus"
+            neuesBE.umlagern(Puffer_Bus_Bahnhof)
+        end
+
+        -- Restliche Gruppenmitglieder erzeugen
+        k := 2
+        while k <= groesse
+
+            neuesBE := .Benutzerobjekte.Touristen_2_4.erzeugen(Puffer_Taxi_Bahnhof)
+
+            neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+            neuesBE.Gruppe_Groesse := groesse
+            neuesBE.Abfahrt        := "Bahnhof"
+            neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+            neuesBE.Ankunftsort    := "Bahnhof"
+            neuesBE.Abfahrtsort    := gruppeAbfahrtsort
+            neuesBE.Szenario       := gruppeSzenario
+            neuesBE.ReisePhase     := gruppeReisePhase
+            neuesBE.Ziel           := gruppeZiel
+            neuesBE.HotelZiel      := gruppeHotelZiel
+            neuesBE.Transportmodus := gruppeTransportmodus
+
+            TRACKING_INIT_BE_V1(neuesBE)
+
+            if neuesBE.Transportmodus = "Bus"
+                neuesBE.umlagern(Puffer_Bus_Bahnhof)
+            end
+
+            k := k + 1
+        end
+
+    -- ============================================================
+    -- TYP 3: GRUPPE 5-6
+    -- Wichtig: Szenario nur einmal bestimmen und dann kopieren
+    -- ============================================================
+    else
+
+        groesse := round(z_gleich(z_gleich(96, 1, 1000), 5, 6))
+        if groesse < 5 then groesse := 5
+        end
+        var gruppeSzenario2, gruppeReisePhase2, gruppeZiel2, gruppeHotelZiel2 : string
+        var gruppeAbfahrtsort2, gruppeTransportmodus2 : string
+
+        -- Erstes Gruppenmitglied erzeugen
+        neuesBE := .Benutzerobjekte.Touristen_5_6.erzeugen(Puffer_Taxi_Bahnhof)
+
+        neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+        neuesBE.Gruppe_Groesse := groesse
+        neuesBE.Abfahrt        := "Bahnhof"
+        neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+        neuesBE.Ankunftsort    := "Bahnhof"
+        neuesBE.Abfahrtsort    := "Bahnhof"
+        neuesBE.HotelZiel      := ""
+
+        -- Szenario einmal fuer die ganze Gruppe bestimmen
+        SZENARIO_TOURIST_V3(neuesBE)
+
+        -- Transportmittel einmal fuer die ganze Gruppe bestimmen
+        transportZufall := round(z_gleich(2, 1, 10))
+
+        if transportZufall <= 7 and neuesBE.Ziel /= "Parlament"
+            neuesBE.Transportmodus := "Bus"
+        else
+            neuesBE.Transportmodus := "Taxi"
+        end
+
+        -- Gruppenwerte merken
+        gruppeSzenario2       := neuesBE.Szenario
+        gruppeReisePhase2     := neuesBE.ReisePhase
+        gruppeZiel2           := neuesBE.Ziel
+        gruppeHotelZiel2      := neuesBE.HotelZiel
+        gruppeAbfahrtsort2    := neuesBE.Abfahrtsort
+        gruppeTransportmodus2 := neuesBE.Transportmodus
+
+        TRACKING_INIT_BE_V1(neuesBE)
+
+        if neuesBE.Transportmodus = "Bus"
+            neuesBE.umlagern(Puffer_Bus_Bahnhof)
+        end
+
+        -- Restliche Gruppenmitglieder erzeugen
+        k := 2
+        while k <= groesse
+
+            neuesBE := .Benutzerobjekte.Touristen_5_6.erzeugen(Puffer_Taxi_Bahnhof)
+
+            neuesBE.Gruppe_Nummer  := GruppenZaehler_Global
+            neuesBE.Gruppe_Groesse := groesse
+            neuesBE.Abfahrt        := "Bahnhof"
+            neuesBE.ArrivalTime    := Ereignisverwalter.absZeit
+
+            neuesBE.Ankunftsort    := "Bahnhof"
+            neuesBE.Abfahrtsort    := gruppeAbfahrtsort2
+            neuesBE.Szenario       := gruppeSzenario2
+            neuesBE.ReisePhase     := gruppeReisePhase2
+            neuesBE.Ziel           := gruppeZiel2
+            neuesBE.HotelZiel      := gruppeHotelZiel2
+            neuesBE.Transportmodus := gruppeTransportmodus2
+
+            TRACKING_INIT_BE_V1(neuesBE)
+
+            if neuesBE.Transportmodus = "Bus"
+                neuesBE.umlagern(Puffer_Bus_Bahnhof)
+            end
+
+            k := k + 1
+        end
+    end
+
+    rest := rest - groesse
+    wait 1
+end
+
+-- --- Trigger-BE nach Abarbeitung loeschen ---
+@.delete

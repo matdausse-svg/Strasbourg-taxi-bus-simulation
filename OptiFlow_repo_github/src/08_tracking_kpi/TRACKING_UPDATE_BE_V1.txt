@@ -1,0 +1,44 @@
+-- ============================================================
+-- TRACKING_UPDATE_BE_V1: TRACKING_UPDATE_BE_V1
+-- Aktualisiert die Tracking-Zeile eines vorhandenen BEs
+-- pOrt = neuer Ort
+-- pStatus = aktueller Status
+-- ============================================================
+
+param pBE : object, pOrt : string, pStatus : string
+
+var zeile : integer
+
+zeile := pBE.TrackingZeile
+
+if zeile <= 0
+    return
+end
+
+-- Ort nur an den Pfad anhaengen, wenn ein neuer Ort uebergeben wurde
+if pOrt /= ""
+    if pBE.AktuellerOrt /= pOrt
+        if pBE.Pfad = ""
+            pBE.Pfad := pOrt
+        else
+            pBE.Pfad := pBE.Pfad + " -> " + pOrt
+        end
+
+        pBE.AktuellerOrt := pOrt
+    end
+end
+
+pBE.Status := pStatus
+
+-- Dynamische Werte aktualisieren
+Tabelle_BE_Tracking[5, zeile] := pBE.Szenario
+Tabelle_BE_Tracking[6, zeile] := pBE.ReisePhase
+Tabelle_BE_Tracking[7, zeile] := pBE.Ankunftsort
+Tabelle_BE_Tracking[8, zeile] := pBE.Abfahrtsort
+Tabelle_BE_Tracking[9, zeile] := pBE.Ziel
+Tabelle_BE_Tracking[10, zeile] := pBE.HotelZiel
+Tabelle_BE_Tracking[11, zeile] := pBE.Transportmodus
+Tabelle_BE_Tracking[12, zeile] := pBE.AktuellerOrt
+Tabelle_BE_Tracking[13, zeile] := pBE.Pfad
+Tabelle_BE_Tracking[15, zeile] := to_str(Ereignisverwalter.absZeit)
+Tabelle_BE_Tracking[16, zeile] := pBE.Status

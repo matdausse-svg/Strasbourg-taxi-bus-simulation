@@ -1,0 +1,425 @@
+-- ============================================================
+-- PUFFER_WAHLEN_V2
+-- Entscheidet, welcher Taxi-Puffer als naechstes angefahren wird
+-- Zaehlt kompatible BEs je Fahrzeugtyp
+-- Version erweitert fuer Rueckfahrten aus Stadt/Hotel/Forum/Parlament
+-- ============================================================
+
+var nBahnhof, nBusbahnhof, nFlughafen : integer
+var nStadt, nHotel1, nHotel2, nForum, nParlament : integer
+var maxN : integer
+var i, n : integer
+var beAktuell : object
+var wegAktuell : object
+nBahnhof    := 0
+nBusbahnhof := 0
+nFlughafen  := 0
+nStadt      := 0
+nHotel1     := 0
+nHotel2     := 0
+nForum      := 0
+nParlament  := 0
+
+wegAktuell := @.Zielort
+-- ============================================================
+-- Puffer_Taxi_Bahnhof zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Bahnhof_Puffer_Taxi
+    n := Puffer_Taxi_Bahnhof.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Bahnhof.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nBahnhof := nBahnhof + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nBahnhof := nBahnhof + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Busbahnhof zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Busbahnhof_Puffer_Taxi
+    n := Puffer_Taxi_Busbahnhof.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Busbahnhof.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nBusbahnhof := nBusbahnhof + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nBusbahnhof := nBusbahnhof + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Flughafen zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Flughafen_Puffer_Taxi
+    n := Puffer_Taxi_Flughafen.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Flughafen.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nFlughafen := nFlughafen + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nFlughafen := nFlughafen + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Stadt zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Stadt_Puffer_Taxi
+    n := Puffer_Taxi_Stadt.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Stadt.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nStadt := nStadt + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nStadt := nStadt + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Hotel1 zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Hotel1_Puffer_Taxi
+    n := Puffer_Taxi_Hotel1.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Hotel1.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nHotel1 := nHotel1 + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nHotel1 := nHotel1 + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Hotel2 zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Hotel2_Puffer_Taxi
+    n := Puffer_Taxi_Hotel2.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Hotel2.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nHotel2 := nHotel2 + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nHotel2 := nHotel2 + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Forum zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Forum_Puffer_Taxi
+    n := Puffer_Taxi_Forum.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Forum.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nForum := nForum + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nForum := nForum + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Puffer_Taxi_Parlament zaehlen
+-- ============================================================
+
+if wegAktuell /= Weg_Parlament_Puffer_Taxi
+    n := Puffer_Taxi_Parlament.numMU
+    i := 1
+    while i <= n
+        beAktuell := Puffer_Taxi_Parlament.BE(i)
+        if @.name = "Taxi"
+            if beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nParlament := nParlament + 1
+            end
+        elseif @.name = "TaxiVan"
+            if beAktuell.name = "Touristen_5_6" or beAktuell.name = "Touristen_2_4" or beAktuell.name = "Einzeltourist" or beAktuell.name = "Europaabgeordneter" or beAktuell.name = "Schueler_Student"
+                nParlament := nParlament + 1
+            end
+        end
+        i := i + 1
+    end
+end
+
+-- ============================================================
+-- Maximalwert bestimmen
+-- ============================================================
+
+maxN := nBahnhof
+
+if nBusbahnhof > maxN
+    maxN := nBusbahnhof
+end
+
+if nFlughafen > maxN
+    maxN := nFlughafen
+end
+
+if nStadt > maxN
+    maxN := nStadt
+end
+
+if nHotel1 > maxN
+    maxN := nHotel1
+end
+
+if nHotel2 > maxN
+    maxN := nHotel2
+end
+
+if nForum > maxN
+    maxN := nForum
+end
+
+if nParlament > maxN
+    maxN := nParlament
+end
+
+-- ============================================================
+-- Wenn gar keine Kunden warten: zwischen Hubs pendeln
+-- ============================================================
+
+if maxN <= 0
+    WechselZaehler := WechselZaehler + 1
+    if wegAktuell = Weg_Bahnhof_Puffer_Taxi
+        if (WechselZaehler mod 2) = 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        else
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        end
+    elseif wegAktuell = Weg_Busbahnhof_Puffer_Taxi
+        if (WechselZaehler mod 2) = 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        else
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        end
+    elseif wegAktuell = Weg_Flughafen_Puffer_Taxi
+        if (WechselZaehler mod 2) = 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        else
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        end
+    else
+        if (WechselZaehler mod 3) = 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif (WechselZaehler mod 3) = 1
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        else
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        end
+    end
+
+else
+
+    WechselZaehler := WechselZaehler + 1
+
+    if (WechselZaehler mod 8) = 0
+        if nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        end
+
+    elseif (WechselZaehler mod 8) = 1
+        if nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        end
+
+    elseif (WechselZaehler mod 8) = 2
+        if nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        end
+
+    elseif (WechselZaehler mod 8) = 3
+        if nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        end
+
+    elseif (WechselZaehler mod 8) = 4
+        if nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        end
+
+    elseif (WechselZaehler mod 8) = 5
+        if nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        end
+
+    elseif (WechselZaehler mod 8) = 6
+        if nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        elseif nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        end
+
+    else
+        if nParlament = maxN and nParlament > 0
+            @.Zielort := Weg_Parlament_Puffer_Taxi
+        elseif nBahnhof = maxN and nBahnhof > 0
+            @.Zielort := Weg_Bahnhof_Puffer_Taxi
+        elseif nBusbahnhof = maxN and nBusbahnhof > 0
+            @.Zielort := Weg_Busbahnhof_Puffer_Taxi
+        elseif nFlughafen = maxN and nFlughafen > 0
+            @.Zielort := Weg_Flughafen_Puffer_Taxi
+        elseif nStadt = maxN and nStadt > 0
+            @.Zielort := Weg_Stadt_Puffer_Taxi
+        elseif nHotel1 = maxN and nHotel1 > 0
+            @.Zielort := Weg_Hotel1_Puffer_Taxi
+        elseif nHotel2 = maxN and nHotel2 > 0
+            @.Zielort := Weg_Hotel2_Puffer_Taxi
+        elseif nForum = maxN and nForum > 0
+            @.Zielort := Weg_Forum_Puffer_Taxi
+        end
+    end
+
+end

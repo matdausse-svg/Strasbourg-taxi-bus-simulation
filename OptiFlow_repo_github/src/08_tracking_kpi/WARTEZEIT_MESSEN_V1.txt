@@ -1,0 +1,35 @@
+-- ============================================================
+-- WARTEZEIT_MESSEN_V1
+-- Misst die Wartezeit eines BEs vom Eintreffen im Puffer
+-- bis zum Einsteigen ins Taxi
+-- ============================================================
+
+param beAktuell : object
+
+var Wartezeit : time
+
+-- PickupTime setzen und Wartezeit berechnen
+beAktuell.PickupTime := Ereignisverwalter.absZeit
+Wartezeit := beAktuell.PickupTime - beAktuell.ArrivalTime
+
+-- Zaehler erhoehen
+Anzahl := Anzahl + 1
+
+-- Min / Max aktualisieren
+if Anzahl = 1
+    WartezeitMin := Wartezeit
+    WartezeitMax := Wartezeit
+else
+    if Wartezeit > WartezeitMax
+        WartezeitMax := Wartezeit
+    end
+    if Wartezeit < WartezeitMin
+        WartezeitMin := Wartezeit
+    end
+end
+
+-- Mittelwert aktualisieren
+WartezeitMittel := ((Anzahl - 1) * WartezeitMittel + Wartezeit) / Anzahl
+
+-- Ergebnis in Tabelle schreiben
+WartezeitErgebnis.schreibeZeile(1, WartezeitErgebnis.YDim + 1, Anzahl, Wartezeit)

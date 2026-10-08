@@ -1,0 +1,84 @@
+-- ============================================================
+-- GRUPPE_SUCHEN_BUS
+-- Sucht eine vollstaendige Gruppe im Puffer die fuer diesen Bus bestimmt ist
+-- Beruecksichtigt Linien und freie Plaetze
+-- Sonderlogik fuer Umstiegspunkt Hotel2
+-- ============================================================
+param pPuffer : object
+var i, n, gruppe, groesse, anzahl, j, freiePlaetze : integer
+var beAktuell, beJ : object
+var zielErlaubt : boolean
+
+@.GruppeGefunden_OK     := false
+@.GruppeGefunden_Nummer := 0
+
+freiePlaetze := 40 - @.numMU
+n := pPuffer.numMU
+i := 1
+
+while i <= n
+    beAktuell := pPuffer.BE(i)
+    gruppe    := beAktuell.Gruppe_Nummer
+    groesse   := beAktuell.Gruppe_Groesse
+    zielErlaubt := false
+
+    if beAktuell.Transportmodus /= "Bus"
+        i := i + 1
+    else
+
+        -- ------------------------------------------------------------
+        -- Sonderlogik Umstiegspunkt Hotel2
+        -- Jeder Bus nimmt nur BEs auf seiner Linie
+        -- ------------------------------------------------------------
+        if pPuffer = Puffer_Bus_Hotel2
+
+            if @.name = "Bus_Bahn"
+                if beAktuell.Ziel = "Busbahnhof" or beAktuell.Ziel = "Bahnhof" or beAktuell.Ziel = "Flughafen" or beAktuell.Ziel = "Hotel2"
+                    zielErlaubt := true
+                end
+            elseif @.name = "Bus_Stadt"
+                if beAktuell.Ziel = "Hotel1" or beAktuell.Ziel = "Forum" or beAktuell.Ziel = "Stadt" or beAktuell.Ziel = "Bahnhof"
+                    zielErlaubt := true
+                end
+            end
+
+        -- ------------------------------------------------------------
+        -- Ueberall sonst: jeder Bus nimmt alle BEs
+        -- ausser sein eigener Umstieg wurde bereits gehandhabt
+        -- ------------------------------------------------------------
+        elseif @.name = "Bus_Bahn"
+            if beAktuell.Ziel = "Busbahnhof" or beAktuell.Ziel = "Bahnhof" or beAktuell.Ziel = "Flughafen" or beAktuell.Ziel = "Hotel2" or beAktuell.Ziel = "Hotel1" or beAktuell.Ziel = "Forum" or beAktuell.Ziel = "Stadt"
+                zielErlaubt := true
+            end
+
+        elseif @.name = "Bus_Stadt"
+            if beAktuell.Ziel = "Hotel1" or beAktuell.Ziel = "Forum" or beAktuell.Ziel = "Stadt" or beAktuell.Ziel = "Hotel2" or beAktuell.Ziel = "Bahnhof" or beAktuell.Ziel = "Busbahnhof" or beAktuell.Ziel = "Flughafen"
+                zielErlaubt := true
+            end
+
+        end
+
+        -- ------------------------------------------------------------
+        -- Gruppe vollstaendig pruefen
+        -- ------------------------------------------------------------
+        if zielErlaubt and groesse <= freiePlaetze
+            anzahl := 0
+            j := 1
+            while j <= n
+                beJ := pPuffer.BE(j)
+                if beJ.Gruppe_Nummer = gruppe
+                    anzahl := anzahl + 1
+                end
+                j := j + 1
+            end
+            if anzahl >= 1
+                @.GruppeGefunden_Nummer := gruppe
+                @.GruppeGefunden_OK     := true
+                return
+            end
+        end
+
+        i := i + 1
+
+    end
+end

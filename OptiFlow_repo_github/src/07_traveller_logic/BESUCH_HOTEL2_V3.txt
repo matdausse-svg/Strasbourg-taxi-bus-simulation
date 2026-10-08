@@ -1,0 +1,128 @@
+var pBE : object
+pBE := @
+var dauerStunden : real
+var zielZufall : integer
+var zeitText, tagText : string
+var tagNr, wochentag : integer
+
+pBE.HotelZiel := "Hotel2"
+TRACKING_UPDATE_BE_V1(pBE, "Hotel2", "im Hotel2")
+
+zeitText  := to_str(Ereignisverwalter.absZeit)
+tagText   := strCopy(zeitText, 1, 2)
+tagNr     := str_to_num(tagText)
+wochentag := (tagNr - 5) mod 7
+
+if pBE.Szenario = "Geschaeftsreise"
+
+    dauerStunden := 6
+    wait dauerStunden * 3600
+
+    ZIEL_LESEN_V1(pBE.Gruppe_Nummer, 5)
+    zielZufall := ZielAktuell_Global
+
+    if (wochentag = 4) or (wochentag = 5)
+        if zielZufall <= 60
+            pBE.Ziel := "Stadt"
+            pBE.ReisePhase := "ZurStadt"
+        elseif zielZufall <= 90
+            pBE.Ziel := "Forum"
+            pBE.ReisePhase := "ZumForum"
+        else
+            pBE.Ziel := "Parlament"
+            pBE.ReisePhase := "ZumParlament"
+        end
+    else
+        if zielZufall <= 67
+            pBE.Ziel := "Stadt"
+            pBE.ReisePhase := "ZurStadt"
+        else
+            pBE.Ziel := "Forum"
+            pBE.ReisePhase := "ZumForum"
+        end
+    end
+
+elseif pBE.Szenario = "Urlaub"
+
+    if pBE.ReisePhase = "ZumHotel"
+
+        dauerStunden := 8
+        wait dauerStunden * 3600
+        pBE.ReisePhase := "Urlaub_Tag1"
+
+        ZIEL_LESEN_V1(pBE.Gruppe_Nummer, 6)
+        zielZufall := ZielAktuell_Global
+
+        if zielZufall <= 85
+            pBE.Ziel := "Stadt"
+            pBE.ReisePhase := "Urlaub_Tag1"
+        else
+            pBE.Ziel := "Forum"
+            pBE.ReisePhase := "Urlaub_Tag1"
+        end
+
+    elseif pBE.ReisePhase = "Urlaub_Nacht2"
+
+        dauerStunden := 10
+        wait dauerStunden * 3600
+        pBE.ReisePhase := "Urlaub_Tag2"
+
+        ZIEL_LESEN_V1(pBE.Gruppe_Nummer, 7)
+        zielZufall := ZielAktuell_Global
+
+        if (wochentag = 4) or (wochentag = 5)
+            if zielZufall <= 60
+                pBE.Ziel := "Stadt"
+            elseif zielZufall <= 95
+                pBE.Ziel := "Forum"
+            else
+                pBE.Ziel := "Parlament"
+            end
+        else
+            if zielZufall <= 65
+                pBE.Ziel := "Stadt"
+            else
+                pBE.Ziel := "Forum"
+            end
+        end
+
+    elseif pBE.ReisePhase = "Urlaub_Nacht3"
+
+        dauerStunden := 9
+        wait dauerStunden * 3600
+        pBE.ReisePhase := "Urlaub_Tag3"
+
+        ZIEL_LESEN_V1(pBE.Gruppe_Nummer, 8)
+        zielZufall := ZielAktuell_Global
+
+        if (wochentag = 4) or (wochentag = 5)
+            if zielZufall <= 65
+                pBE.Ziel := "Stadt"
+            elseif zielZufall <= 90
+                pBE.Ziel := "Forum"
+            else
+                pBE.Ziel := "Parlament"
+            end
+        else
+            if zielZufall <= 70
+                pBE.Ziel := "Stadt"
+            else
+                pBE.Ziel := "Forum"
+            end
+        end
+
+    else
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+    end
+
+else
+    dauerStunden := 1
+    wait dauerStunden * 3600
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+end
+
+TRANSPORT_WAEHLEN_V3(pBE)
+TRACKING_UPDATE_BE_V1(pBE, "", "wartet auf Weiterfahrt")
+ZUM_PUFFER_V3(pBE)

@@ -1,0 +1,25 @@
+-- ============================================================
+-- TRACKING_INIT_BE_V1: TRACKING_INIT_TABLE_V1
+-- Initialise la table de suivi des BEs
+-- ============================================================
+
+BE_ID_Global := 0
+
+Tabelle_BE_Tracking.delete
+
+Tabelle_BE_Tracking[1,1] := "BE_ID"
+Tabelle_BE_Tracking[2,1] := "BE_Name"
+Tabelle_BE_Tracking[3,1] := "Gruppe_Nummer"
+Tabelle_BE_Tracking[4,1] := "Gruppe_Groesse"
+Tabelle_BE_Tracking[5,1] := "Szenario"
+Tabelle_BE_Tracking[6,1] := "ReisePhase"
+Tabelle_BE_Tracking[7,1] := "Ankunftsort"
+Tabelle_BE_Tracking[8,1] := "Abfahrtsort"
+Tabelle_BE_Tracking[9,1] := "Ziel"
+Tabelle_BE_Tracking[10,1] := "HotelZiel"
+Tabelle_BE_Tracking[11,1] := "Transportmodus"
+Tabelle_BE_Tracking[12,1] := "AktuellerOrt"
+Tabelle_BE_Tracking[13,1] := "Pfad"
+Tabelle_BE_Tracking[14,1] := "ArrivalTime"
+Tabelle_BE_Tracking[15,1] := "LastUpdate"
+Tabelle_BE_Tracking[16,1] := "Status"

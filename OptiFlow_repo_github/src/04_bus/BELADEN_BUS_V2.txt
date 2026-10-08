@@ -1,0 +1,47 @@
+-- ============================================================
+-- BELADEN_BUS_V2
+-- Laedt Gruppen in den Bus
+-- Wird auf jedem Bus-Haltestellen-Weg ausgefuehrt
+-- Erweiterung: Tracking "im Bus"
+-- ============================================================
+
+if not @.IstBus
+    return
+end
+
+var puffer : object
+var i : integer
+var beAktuell : object
+
+if ?.name = "Bus_Bahn1"
+    puffer := Puffer_Bus_Busbahnhof
+
+elseif ?.name = "Bus_Bahn6_Bus_Stadt6"
+    puffer := Puffer_Bus_Bahnhof
+
+elseif ?.name = "Bus_Bahn7_Bus_Stadt7"
+    puffer := Puffer_Bus_Hotel2
+
+elseif ?.name = "Bus_Bahn9"
+    puffer := Puffer_Bus_Flughafen
+
+elseif ?.name = "Bus_Stadt1"
+    puffer := Puffer_Bus_Hotel1
+
+elseif ?.name = "Bus_Stadt2"
+    puffer := Puffer_Bus_Forum
+
+elseif ?.name = "Bus_Stadt4"
+    puffer := Puffer_Bus_Stadt
+
+end
+
+if puffer = void
+    return
+end
+
+Gruppe_Suchen_Bus(puffer)
+while @.GruppeGefunden_OK
+    Gruppe_Laden(puffer, @.GruppeGefunden_Nummer)
+    Gruppe_Suchen_Bus(puffer)
+end

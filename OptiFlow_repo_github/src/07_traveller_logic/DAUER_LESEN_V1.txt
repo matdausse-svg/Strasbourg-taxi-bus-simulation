@@ -1,0 +1,26 @@
+-- Liest oder berechnet die Aufenthaltsdauer fuer eine Gruppe
+-- Schreibt das Ergebnis in Tabelle_Dauer_Gruppe
+-- Gibt die Dauer zurueck via Frame-Attribut: DauerAktuell_Global
+param pGruppeNummer : integer, pMin : integer, pMax : integer
+
+var zeile, i : integer
+var gefunden : boolean
+
+gefunden := false
+i := 1
+while i <= Tabelle_Dauer_Gruppe.YDim
+    if Tabelle_Dauer_Gruppe[1, i] = pGruppeNummer
+        DauerAktuell_Global := Tabelle_Dauer_Gruppe[2, i]
+        gefunden := true
+        i := Tabelle_Dauer_Gruppe.YDim + 1
+    else
+        i := i + 1
+    end
+end
+
+if not gefunden
+    DauerAktuell_Global := z_gleich(pGruppeNummer, pMin, pMax)
+    zeile := Tabelle_Dauer_Gruppe.YDim + 1
+    Tabelle_Dauer_Gruppe[1, zeile] := pGruppeNummer
+    Tabelle_Dauer_Gruppe[2, zeile] := DauerAktuell_Global
+end

@@ -1,0 +1,38 @@
+-- ============================================================
+-- TRACKING_INIT_BE_V1: TRACKING_INIT_BE_V1
+-- Erstellt eine Tracking-Zeile fuer ein neues BE
+-- Eine Zeile = ein BE
+-- ============================================================
+
+param pBE : object
+
+var zeile : integer
+
+BE_ID_Global := BE_ID_Global + 1
+
+pBE.BE_ID := BE_ID_Global
+pBE.TrackingZeile := Tabelle_BE_Tracking.YDim + 1
+
+zeile := pBE.TrackingZeile
+
+
+pBE.Pfad := pBE.Ankunftsort
+pBE.AktuellerOrt := pBE.Ankunftsort
+pBE.Status := "wartet"
+
+Tabelle_BE_Tracking[1, zeile] := to_str(pBE.BE_ID)
+Tabelle_BE_Tracking[2, zeile] := pBE.name
+Tabelle_BE_Tracking[3, zeile] := to_str(pBE.Gruppe_Nummer)
+Tabelle_BE_Tracking[4, zeile] := to_str(pBE.Gruppe_Groesse)
+Tabelle_BE_Tracking[5, zeile] := pBE.Szenario
+Tabelle_BE_Tracking[6, zeile] := pBE.ReisePhase
+Tabelle_BE_Tracking[7, zeile] := pBE.Ankunftsort
+Tabelle_BE_Tracking[8, zeile] := pBE.Abfahrtsort
+Tabelle_BE_Tracking[9, zeile] := pBE.Ziel
+Tabelle_BE_Tracking[10, zeile] := pBE.HotelZiel
+Tabelle_BE_Tracking[11, zeile] := pBE.Transportmodus
+Tabelle_BE_Tracking[12, zeile] := pBE.AktuellerOrt
+Tabelle_BE_Tracking[13, zeile] := pBE.Pfad
+Tabelle_BE_Tracking[14, zeile] := to_str(pBE.ArrivalTime)
+Tabelle_BE_Tracking[15, zeile] := to_str(Ereignisverwalter.absZeit)
+Tabelle_BE_Tracking[16, zeile] := pBE.Status

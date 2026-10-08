@@ -1,0 +1,83 @@
+-- Erzeugt die Lieferliste fuer mehrere Tage mit realistischem Tagesprofil je Quelle.
+-- ziel       : Lieferliste der Quelle (Sp.1 Zeit, Sp.2 BE-Klasse, Sp.3 Anzahl)
+-- quelle     : 1 = Bahnhof, 2 = Flughafen, 3 = Busbahnhof
+-- anzahlTage : Anzahl Tage
+param ziel : object, quelle : integer, anzahlTage : integer
+
+ziel.löschen
+
+var tag, tod, stunde, mittlAbstand, abstand, zeile, wochentag : integer
+var startStd, endStd : integer
+var gesamtSek : integer
+var zt : time
+
+-- Betriebszeitfenster je Quelle
+if quelle = 1                 -- Bahnhof: schliesst nachts
+    startStd := 6
+    endStd   := 22
+elseif quelle = 2             -- Flughafen: bis spaet in die Nacht (Inselfluege)
+    startStd := 6
+    endStd   := 24
+else                          -- Busbahnhof: durchgehender 24h-Betrieb
+    startStd := 0
+    endStd   := 24
+end
+
+zeile := 1
+tag   := 0
+
+while tag < anzahlTage
+    wochentag := tag mod 7                        -- Annahme: Tag 0 = Montag
+    tod := startStd * 3600
+    while tod < endStd * 3600
+        stunde := tod div 3600
+
+        -- ---- Tagesprofil: mittlerer Abstand zwischen zwei Ankuenften (Sekunden) ----
+        if quelle = 1
+            -- BAHNHOF
+            if   (stunde >= 6)  and (stunde < 9)  then mittlAbstand := 18*60   -- Frueher Berufsverkehr (TGV Paris, ICE, TER)
+            elseif (stunde >= 16) and (stunde < 20) then mittlAbstand := 18*60 -- Abendlicher Berufsverkehr
+            elseif (stunde >= 10) and (stunde < 16) then mittlAbstand := 35*60 -- Stetiger Taktverkehr
+            elseif (stunde = 9) then mittlAbstand := 28*60                     -- Uebergang
+            else mittlAbstand := 50*60 end                                     -- 20-22 Ruhephase
+
+        elseif quelle = 2
+            -- FLUGHAFEN
+            if   (stunde >= 8)  and (stunde < 11) then mittlAbstand := 40*60   -- Erste Ankuenfte (inl./europ.)
+            elseif (stunde >= 11) and (stunde < 13) then mittlAbstand := 45*60 -- Mittelmeer / Nordafrika
+            elseif (stunde >= 18) and (stunde < 21) then mittlAbstand := 35*60 -- Hauptankunft (Geschaefts-/Ferienflieger)
+            elseif (stunde >= 23) then mittlAbstand := 50*60                   -- Spaete Inselfluege (Bastia)
+            elseif (stunde >= 6)  and (stunde < 8) then mittlAbstand := 90*60  -- frueh wenig
+            else mittlAbstand := 80*60 end                                     -- 13-18 + 21-23 Grundlast
+
+        else
+            -- BUSBAHNHOF
+            if   (stunde >= 14) and (stunde < 20) then mittlAbstand := 30*60   -- Nachmittag/Abend = Hauptgeschaeft
+            elseif (stunde >= 9)  and (stunde < 14) then mittlAbstand := 50*60 -- Tag
+            elseif (stunde >= 5)  and (stunde < 9)  then mittlAbstand := 55*60 -- Morgen
+            elseif (stunde >= 20) and (stunde < 24) then mittlAbstand := 60*60 -- Abend
+            else mittlAbstand := 90*60 end                                     -- Nacht (0-5 Uhr): duenn, aber durchgehend
+        end
+
+        -- ---- Wochenend-Schwerpunkt Busbahnhof (Fr + So dichter) ----
+        if quelle = 3 and (wochentag = 4 or wochentag = 6) then
+            mittlAbstand := round(mittlAbstand * 0.65)
+        end
+
+        -- Eintrag schreiben: absolute Zeit = Tag-Offset + Tageszeit
+        gesamtSek := tag * 86400 + tod
+        zt := gesamtSek
+        ziel[1, zeile] := zt
+        ziel[2, zeile] := .Benutzerobjekte.Ankunft_Trigger
+        ziel[3, zeile] := 1
+        zeile := zeile + 1
+
+        -- Zufaelliger Abstand: 50%-150% des Mittelwerts (stochastischer Effekt)
+        abstand := round(z_gleich(quelle, 0.5 * mittlAbstand, 1.5 * mittlAbstand))
+        if abstand < 60 then abstand := 60 end
+        tod := tod + abstand
+    end
+    tag := tag + 1
+end
+
+print("Liste " + to_str(ziel) + ": " + to_str(ziel.YDim) + " Eintraege erzeugt")

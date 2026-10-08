@@ -1,0 +1,12 @@
+-- Sensor auf Bus_Bahn7_Bus_Stadt7.B
+-- Leitet Bus_Bahn zu Bus_Bahn8 und Bus_Stadt zum Wendeweg
+
+if not @.IstBus
+    return
+end
+
+if @.name = "Bus_Bahn"
+    @.setRoute([Bus_Bahn8.B, Bus_Bahn9.B, Weg_Wende_Bus_Bahn9, Bus_Bahn9.A, Bus_Bahn8.A, Bus_Bahn7_Bus_Stadt7.A, Bus_Bahn6_Bus_Stadt6.A, Bus_Bahn5_Bus_Stadt5.A, Bus_Bahn4.A, Bus_Bahn3.A, Bus_Bahn2.A])
+elseif @.name = "Bus_Stadt"
+    @.setRoute([Weg_Wende_Bus_Stadt7, Bus_Bahn7_Bus_Stadt7.A, Bus_Bahn6_Bus_Stadt6.A, Bus_Bahn5_Bus_Stadt5.A, Bus_Stadt4.A, Bus_Stadt3.A, Bus_Stadt2.A])
+end

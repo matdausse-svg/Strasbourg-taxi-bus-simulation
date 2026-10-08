@@ -1,0 +1,89 @@
+if not @.IstBus
+    return
+end
+if not @.belegt
+    return
+end
+
+var zielLager : object
+var haltestelleName : string
+var n, i : integer
+var beAktuell : object
+var darfAussteigen : boolean
+var istUmstieg : boolean
+
+if ?.name = "Bus_Bahn1"
+    zielLager       := Senke_Allgemein
+    haltestelleName := "Busbahnhof"
+elseif ?.name = "Bus_Bahn6_Bus_Stadt6"
+    zielLager       := Senke_Allgemein
+    haltestelleName := "Bahnhof"
+elseif ?.name = "Bus_Bahn7_Bus_Stadt7"
+    zielLager       := Lager_Hotel2
+    haltestelleName := "Hotel2"
+elseif ?.name = "Bus_Bahn9"
+    zielLager       := Senke_Allgemein
+    haltestelleName := "Flughafen"
+elseif ?.name = "Bus_Stadt1"
+    zielLager       := Lager_Hotel1
+    haltestelleName := "Hotel1"
+elseif ?.name = "Bus_Stadt2"
+    zielLager       := Lager_Forum
+    haltestelleName := "Forum"
+elseif ?.name = "Bus_Stadt4"
+    zielLager       := Lager_Stadt
+    haltestelleName := "Stadt"
+end
+
+if zielLager = void
+    return
+end
+
+
+
+n := @.numMU
+i := 1
+while i <= n and i <= @.numMU + 1
+    beAktuell := @.BE(i)
+    if beAktuell = void
+        i := i + 1
+    else
+        darfAussteigen := false
+        istUmstieg := false
+
+        if beAktuell.Ziel = haltestelleName
+            darfAussteigen := true
+        elseif haltestelleName = "Hotel2"
+            if @.name = "Bus_Bahn"
+                if beAktuell.Ziel = "Hotel1" or beAktuell.Ziel = "Forum" or beAktuell.Ziel = "Stadt"
+                    darfAussteigen := true
+                    istUmstieg := true
+                end
+            elseif @.name = "Bus_Stadt"
+                if beAktuell.Ziel = "Flughafen" or beAktuell.Ziel = "Busbahnhof"
+                    darfAussteigen := true
+                    istUmstieg := true
+                end
+            end
+        end
+
+        if darfAussteigen
+            if not istUmstieg
+                if zielLager = Senke_Allgemein
+                    TRACKING_UPDATE_BE_V1(beAktuell, haltestelleName, "beendet")
+                    beAktuell.umlagern(zielLager)
+                    wait 1s
+                else
+                    TRACKING_UPDATE_BE_V1(beAktuell, haltestelleName, "aus Bus ausgestiegen")
+                    beAktuell.umlagern(zielLager)
+                end
+            else
+                TRACKING_UPDATE_BE_V1(beAktuell, "Hotel2", "wartet auf Umstieg Bus")
+                beAktuell.umlagern(Puffer_Bus_Hotel2)
+            end
+            n := n - 1
+        else
+            i := i + 1
+        end
+    end
+end

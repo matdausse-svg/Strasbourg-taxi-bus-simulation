@@ -1,0 +1,36 @@
+-- Sucht eine vollstaendige Gruppe eines bestimmten Typs im Puffer
+-- Schreibt das Ergebnis auf das aufrufende Fahrzeug (@)
+
+param pPuffer : object, pTypName : string
+
+var i, n, gruppe, groesse, anzahl, j : integer
+var beAktuell, beJ : object
+
+@.GruppeGefunden_OK     := false
+@.GruppeGefunden_Nummer := 0
+
+n := pPuffer.numMU
+i := 1
+
+while i <= n
+    beAktuell := pPuffer.BE(i)
+    if beAktuell.name = pTypName
+        gruppe  := beAktuell.Gruppe_Nummer
+        groesse := beAktuell.Gruppe_Groesse
+        anzahl  := 0
+        j := 1
+        while j <= n
+            beJ := pPuffer.BE(j)
+            if beJ.Gruppe_Nummer = gruppe and beJ.name = pTypName
+                anzahl := anzahl + 1
+            end
+            j := j + 1
+        end
+        if anzahl >= groesse
+            @.GruppeGefunden_Nummer := gruppe
+            @.GruppeGefunden_OK     := true
+            return
+        end
+    end
+    i := i + 1
+end

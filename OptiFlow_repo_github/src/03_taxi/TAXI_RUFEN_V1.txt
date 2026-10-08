@@ -1,0 +1,21 @@
+param pZielWeg : object
+
+-- Zuerst Bahnhof versuchen
+if not TaxiRuf_Bahnhof
+    TaxiRuf_Bahnhof := true
+    TaxiRuf_Bahnhof_Ziel := pZielWeg
+    return
+end
+
+-- Dann Busbahnhof
+if not TaxiRuf_Busbahnhof
+    TaxiRuf_Busbahnhof := true
+    TaxiRuf_Busbahnhof_Ziel := pZielWeg
+    return
+end
+
+-- Dann Flughafen
+if not TaxiRuf_Flughafen
+    TaxiRuf_Flughafen := true
+    TaxiRuf_Flughafen_Ziel := pZielWeg
+end

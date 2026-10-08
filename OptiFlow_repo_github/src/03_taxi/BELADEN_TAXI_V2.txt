@@ -1,0 +1,283 @@
+-- ============================================================
+-- BELADEN_TAXI_V2
+-- Laedt eine Gruppe / Person in Taxi oder TaxiVan
+-- Erweiterte Version:
+-- - Hub-Puffer
+-- - Stadt / Hotel / Forum / Parlament Puffer
+-- - Europaabgeordneter und Schueler_Student
+-- - Rueckfahrt zu Bahnhof / Flughafen / Busbahnhof
+-- ============================================================
+var pufferAktuell : object
+var kapazitaetMax : integer
+var ersterTourist : object
+var weiterSuchen : boolean
+var zielErster : string
+var k : integer
+var abfahrtErster : string
+
+if @.Zielort = void
+    print("BELADEN ZIEL VOID: " + to_str(@) + " belegt=" + to_str(@.belegt) + " Zeit=" + to_str(Ereignisverwalter.absZeit))
+end
+
+-- ------------------------------------------------------------
+-- Richtigen Puffer anhand Zielort bestimmen
+-- ------------------------------------------------------------
+
+if @.Zielort = Weg_Bahnhof_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Bahnhof
+elseif @.Zielort = Weg_Busbahnhof_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Busbahnhof
+elseif @.Zielort = Weg_Flughafen_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Flughafen
+elseif @.Zielort = Weg_Stadt_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Stadt
+elseif @.Zielort = Weg_Hotel1_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Hotel1
+elseif @.Zielort = Weg_Hotel2_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Hotel2
+elseif @.Zielort = Weg_Forum_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Forum
+elseif @.Zielort = Weg_Parlament_Puffer_Taxi
+    pufferAktuell := Puffer_Taxi_Parlament
+end
+
+if pufferAktuell = void
+    return
+end
+
+-- ------------------------------------------------------------
+-- Kapazitaet je Fahrzeugtyp
+-- ------------------------------------------------------------
+
+if @.name = "Taxi"
+    kapazitaetMax := 4
+elseif @.name = "TaxiVan"
+    kapazitaetMax := 6
+else
+    kapazitaetMax := 4
+end
+
+-- ------------------------------------------------------------
+-- Gruppe / Person laden je nach Fahrzeugtyp
+-- ------------------------------------------------------------
+
+if @.name = "Taxi"
+    Gruppe_Suchen(pufferAktuell, "Europaabgeordneter")
+    if @.GruppeGefunden_OK
+        Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+        abfahrtErster := @.BE(1).Abfahrt
+        weiterSuchen := true
+        while weiterSuchen and @.numMU < kapazitaetMax
+            Gruppe_Suchen(pufferAktuell, "Europaabgeordneter")
+            if @.GruppeGefunden_OK
+                k := 1
+                while k <= pufferAktuell.numMU
+                    if pufferAktuell.BE(k).Gruppe_Nummer = @.GruppeGefunden_Nummer
+                        if pufferAktuell.BE(k).Abfahrt = abfahrtErster
+                            Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+                        else
+                            weiterSuchen := false
+                        end
+                        k := pufferAktuell.numMU + 1
+                    else
+                        k := k + 1
+                    end
+                end
+            else
+                weiterSuchen := false
+            end
+        end
+    else
+        Gruppe_Suchen(pufferAktuell, "Schueler_Student")
+        if @.GruppeGefunden_OK
+            Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+        else
+            Gruppe_Suchen(pufferAktuell, "Touristen_2_4")
+            if @.GruppeGefunden_OK
+                Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+            else
+                weiterSuchen := true
+                zielErster := ""
+                while weiterSuchen and @.numMU < kapazitaetMax
+                    Gruppe_Suchen(pufferAktuell, "Einzeltourist")
+                    if @.GruppeGefunden_OK
+                        k := 1
+                        while k <= pufferAktuell.numMU
+                            if pufferAktuell.BE(k).Gruppe_Nummer = @.GruppeGefunden_Nummer
+                                if zielErster = ""
+                                    zielErster := pufferAktuell.BE(k).Ziel
+                                end
+                                if pufferAktuell.BE(k).Ziel = zielErster
+                                    Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+                                else
+                                    weiterSuchen := false
+                                end
+                                k := pufferAktuell.numMU + 1
+                            else
+                                k := k + 1
+                            end
+                        end
+                    else
+                        weiterSuchen := false
+                    end
+                end
+            end
+        end
+    end
+elseif @.name = "TaxiVan"
+    Gruppe_Suchen(pufferAktuell, "Touristen_5_6")
+    if @.GruppeGefunden_OK
+        Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+    else
+        Gruppe_Suchen(pufferAktuell, "Touristen_2_4")
+        if @.GruppeGefunden_OK
+            Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+        else
+            Gruppe_Suchen(pufferAktuell, "Europaabgeordneter")
+            if @.GruppeGefunden_OK
+                Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+                abfahrtErster := @.BE(1).Abfahrt
+                weiterSuchen := true
+                while weiterSuchen and @.numMU < kapazitaetMax
+                    Gruppe_Suchen(pufferAktuell, "Europaabgeordneter")
+                    if @.GruppeGefunden_OK
+                        k := 1
+                        while k <= pufferAktuell.numMU
+                            if pufferAktuell.BE(k).Gruppe_Nummer = @.GruppeGefunden_Nummer
+                                if pufferAktuell.BE(k).Abfahrt = abfahrtErster
+                                    Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+                                else
+                                    weiterSuchen := false
+                                end
+                                k := pufferAktuell.numMU + 1
+                            else
+                                k := k + 1
+                            end
+                        end
+                    else
+                        weiterSuchen := false
+                    end
+                end
+            else
+                Gruppe_Suchen(pufferAktuell, "Schueler_Student")
+                if @.GruppeGefunden_OK
+                    Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+                else
+                    weiterSuchen := true
+                    zielErster := ""
+                    while weiterSuchen and @.numMU < kapazitaetMax
+                        Gruppe_Suchen(pufferAktuell, "Einzeltourist")
+                        if @.GruppeGefunden_OK
+                            k := 1
+                            while k <= pufferAktuell.numMU
+                                if pufferAktuell.BE(k).Gruppe_Nummer = @.GruppeGefunden_Nummer
+                                    if zielErster = ""
+                                        zielErster := pufferAktuell.BE(k).Ziel
+                                    end
+                                    if pufferAktuell.BE(k).Ziel = zielErster
+                                        Gruppe_Laden(pufferAktuell, @.GruppeGefunden_Nummer)
+                                    else
+                                        weiterSuchen := false
+                                    end
+                                    k := pufferAktuell.numMU + 1
+                                else
+                                    k := k + 1
+                                end
+                            end
+                        else
+                            weiterSuchen := false
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+-- ------------------------------------------------------------
+-- Falls nichts geladen wurde: neuen Puffer suchen
+-- ------------------------------------------------------------
+
+if not @.belegt
+    print("BELADEN appel PUFFER_WAHLEN: " + to_str(@) + " Zielort=" + to_str(@.Zielort) + " Zeit=" + to_str(Ereignisverwalter.absZeit))
+    PUFFER_WAHLEN_V2
+    return
+end
+
+-- ------------------------------------------------------------
+-- Ziel anhand des ersten geladenen BEs bestimmen
+-- ------------------------------------------------------------
+
+ersterTourist := @.inhalt
+
+if ersterTourist.Ziel = "Stadt"
+
+    @.Ziel_Lager := Lager_Stadt
+    @.Zielort    := Weg_Stadt_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Hotel1"
+
+    @.Ziel_Lager := Lager_Hotel1
+    @.Zielort    := Weg_Hotel1_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Hotel2"
+
+    @.Ziel_Lager := Lager_Hotel2
+    @.Zielort    := Weg_Hotel2_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Forum"
+
+    @.Ziel_Lager := Lager_Forum
+    @.Zielort    := Weg_Forum_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Parlament"
+
+    @.Ziel_Lager := Lager_Parlament
+    @.Zielort    := Weg_Parlament_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Bahnhof"
+
+    @.Ziel_Lager := Senke_Allgemein
+    @.Zielort    := Weg_Bahnhof_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Flughafen"
+
+    @.Ziel_Lager := Senke_Allgemein
+    @.Zielort    := Weg_Flughafen_Puffer_Taxi
+
+elseif ersterTourist.Ziel = "Busbahnhof"
+
+    @.Ziel_Lager := Senke_Allgemein
+    @.Zielort    := Weg_Busbahnhof_Puffer_Taxi
+
+end
+
+-- ------------------------------------------------------------
+-- Rueckfahrt des Fahrzeugs setzen
+-- Wird nach dem Entladen benutzt, falls kein anderer Puffer wartet
+-- ------------------------------------------------------------
+
+if ersterTourist.Abfahrt = "Bahnhof"
+    @.Rueckfahrt := Weg_Bahnhof_Puffer_Taxi
+
+elseif ersterTourist.Abfahrt = "Flughafen"
+    @.Rueckfahrt := Weg_Flughafen_Puffer_Taxi
+
+elseif ersterTourist.Abfahrt = "Busbahnhof"
+    @.Rueckfahrt := Weg_Busbahnhof_Puffer_Taxi
+
+end
+
+-- ------------------------------------------------------------
+-- Tracking: Personen sind jetzt im Taxi + KPI Wartezeit
+-- ------------------------------------------------------------
+
+var i : integer
+var beAktuell : object
+
+i := 1
+while i <= @.numMU
+    beAktuell := @.BE(i)
+    TRACKING_UPDATE_BE_V1(beAktuell, "", "im Taxi")
+    WARTEZEIT_MESSEN_V1(beAktuell)
+    i := i + 1
+end

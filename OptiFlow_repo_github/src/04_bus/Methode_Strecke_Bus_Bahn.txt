@@ -1,0 +1,5 @@
+if @.name /= "Bus_Bahn"
+    return
+end
+
+@.setRoute([Bus_Bahn2.B, Bus_Bahn3.B, Bus_Bahn4.B, Bus_Bahn5_Bus_Stadt5.B, Bus_Bahn6_Bus_Stadt6.B, Bus_Bahn7_Bus_Stadt7.B])

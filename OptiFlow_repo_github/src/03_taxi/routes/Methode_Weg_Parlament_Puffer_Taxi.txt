@@ -1,0 +1,13 @@
+-- Sensor auf Weg_Parlament_Puffer_Taxi
+-- Verhindert, dass leere Taxis endlos um das Parlament kreisen
+
+if @.Zielort = Weg_Parlament_Puffer_Taxi
+    if not @.belegt
+        if Puffer_Taxi_Parlament.belegt
+            BELADEN_TAXI_V2
+        else
+            @.Rueckfahrt := void
+            PUFFER_WAHLEN_V2
+        end
+    end
+end

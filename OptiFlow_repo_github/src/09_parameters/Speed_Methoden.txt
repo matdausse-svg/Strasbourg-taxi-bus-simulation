@@ -1,0 +1,5 @@
+@.speed := 0.093mps   -- ZENTRUM
+@.speed := 0.155mps   -- HAUPTSTRASSE
+@.speed := 0.186mps   -- AUTOBAHN
+@.speed := 0.062mps   -- BUS_STADT
+@.speed := 0.186mps   -- BUS_AUTOROUTE

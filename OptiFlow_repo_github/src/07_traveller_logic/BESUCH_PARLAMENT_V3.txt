@@ -1,0 +1,131 @@
+-- ============================================================
+-- BESUCH_PARLAMENT_V3: BESUCH_PARLAMENT_V3
+-- Aufenthalt im Parlament
+-- Danach je nach Szenario:
+-- Tagesbesuch      -> Rueckfahrt
+-- Geschaeftsreise  -> Rueckfahrt
+-- Urlaub Tag 2/3   -> Hotel oder Rueckfahrt
+-- Parlament        -> Rueckfahrt fuer Europaabgeordnete
+-- ============================================================
+
+var pBE : object
+pBE := @
+
+var dauerStunden : real
+var zeitText, tagText : string
+var tagNr, wochentag : integer
+
+-- ------------------------------------------------------------
+-- Ankunft im Parlament tracken
+-- ------------------------------------------------------------
+
+-- pBE.AktuellerOrt := "Parlament"
+TRACKING_UPDATE_BE_V1(pBE, "Parlament", "besucht Parlament")
+
+-- ------------------------------------------------------------
+-- Wochentag bestimmen
+-- Montag=0, Dienstag=1, Mittwoch=2, Donnerstag=3,
+-- Freitag=4, Samstag=5, Sonntag=6
+-- ------------------------------------------------------------
+
+zeitText := to_str(Ereignisverwalter.absZeit)
+tagText := strCopy(zeitText, 1, 2)
+tagNr := str_to_num(tagText)
+wochentag := (tagNr - 5) mod 7
+
+-- ------------------------------------------------------------
+-- Aufenthaltsdauer bestimmen
+-- ------------------------------------------------------------
+
+if pBE.Szenario = "Tagesbesuch"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 1, 2)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Geschaeftsreise"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 1, 2)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Urlaub"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 1, 2)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Parlament"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 72, 96)
+    dauerStunden := DauerAktuell_Global
+else
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 1, 2)
+    dauerStunden := DauerAktuell_Global
+end
+wait dauerStunden * 3600
+
+-- ------------------------------------------------------------
+-- Nach dem Parlament: naechstes Ziel bestimmen
+-- ------------------------------------------------------------
+
+-- Tagesbesuch: nach Parlament direkt Rueckfahrt
+if pBE.Szenario = "Tagesbesuch"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Geschaeftsreise: nach Parlament Rueckfahrt
+elseif pBE.Szenario = "Geschaeftsreise"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Urlaub: nach Tag 1/2 zurueck Hotel, nach Tag 3 Rueckfahrt
+elseif pBE.Szenario = "Urlaub"
+
+    if pBE.ReisePhase = "Urlaub_Tag1"
+
+        pBE.ReisePhase := "Urlaub_Nacht2"
+        pBE.Ziel := pBE.HotelZiel
+
+    elseif pBE.ReisePhase = "Urlaub_Tag2"
+
+        pBE.ReisePhase := "Urlaub_Nacht3"
+        pBE.Ziel := pBE.HotelZiel
+
+    elseif pBE.ReisePhase = "Urlaub_Tag3"
+
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+
+    else
+
+        -- Sicherheitsfall
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+
+    end
+
+-- Europaabgeordnete: Rueckfahrt zum urspruenglichen Abfahrtsort
+elseif pBE.Szenario = "Parlament"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+else
+
+    -- Sicherheitsfall
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+end
+
+-- ------------------------------------------------------------
+-- Parlament immer Taxi fuer naechste Fahrt,
+-- weil kein Bus-Puffer Parlament vorgesehen ist
+-- ------------------------------------------------------------
+
+pBE.Transportmodus := "Taxi"
+
+-- ------------------------------------------------------------
+-- Tracking aktualisieren
+-- ------------------------------------------------------------
+
+TRACKING_UPDATE_BE_V1(pBE, "", "wartet auf Weiterfahrt")
+
+-- ------------------------------------------------------------
+-- In passenden Puffer umlagern
+-- ------------------------------------------------------------
+
+ZUM_PUFFER_V3(pBE)

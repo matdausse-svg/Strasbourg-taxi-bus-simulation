@@ -1,0 +1,19 @@
+-- Sensor auf Weg_Bahnhof_Puffer_Taxi
+-- Taxi oder TaxiVan wartet bis Puffer belegt ist
+
+if @.Zielort = Weg_Bahnhof_Puffer_Taxi
+    if not @.belegt
+        @.stopped := true
+        while not Puffer_Taxi_Bahnhof.belegt and not TaxiRuf_Bahnhof
+            wait 1s
+        end
+        @.stopped := false
+        wait 1s
+        if TaxiRuf_Bahnhof
+            TaxiRuf_Bahnhof := false
+            @.Zielort := TaxiRuf_Bahnhof_Ziel
+            return
+        end
+        BELADEN_TAXI_V2
+    end
+end

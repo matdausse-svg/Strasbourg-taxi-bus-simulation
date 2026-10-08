@@ -1,0 +1,125 @@
+-- ============================================================
+-- BESUCH_STADT_V3: BESUCH_STADT_V3
+-- Aufenthalt in der Stadt / Altstadt
+-- Danach je nach Szenario:
+-- Tagesbesuch      -> Rueckfahrt
+-- Geschaeftsreise  -> Rueckfahrt
+-- Urlaub Tag 1     -> zurueck Hotel
+-- Urlaub Tag 2     -> zurueck Hotel
+-- Urlaub Tag 3     -> Rueckfahrt
+-- ============================================================
+
+var pBE : object
+pBE := @
+
+var dauerStunden : real
+var zielZufall : integer
+
+-- ------------------------------------------------------------
+-- Ankunft in Stadt tracken
+-- ------------------------------------------------------------
+
+-- pBE.AktuellerOrt := "Stadt"
+TRACKING_UPDATE_BE_V1(pBE, "Stadt", "besucht Stadt")
+
+-- ------------------------------------------------------------
+-- Besuchsdauer bestimmen
+-- Stadt: meistens 4-8 Stunden
+-- ------------------------------------------------------------
+
+if pBE.Szenario = "Tagesbesuch"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 8)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Geschaeftsreise"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 6)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Urlaub"
+    if pBE.ReisePhase = "Urlaub_Tag1"
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 8)
+        dauerStunden := DauerAktuell_Global
+    elseif pBE.ReisePhase = "Urlaub_Tag2"
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 7)
+        dauerStunden := DauerAktuell_Global
+    elseif pBE.ReisePhase = "Urlaub_Tag3"
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 3, 6)
+        dauerStunden := DauerAktuell_Global
+    else
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 8)
+        dauerStunden := DauerAktuell_Global
+    end
+else
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 3, 6)
+    dauerStunden := DauerAktuell_Global
+end
+
+wait dauerStunden * 3600
+-- ------------------------------------------------------------
+-- Nach dem Stadtbesuch: naechstes Ziel bestimmen
+-- ------------------------------------------------------------
+
+-- Tagesbesuch: nach Stadt direkt zurueck zum Abfahrtsort
+if pBE.Szenario = "Tagesbesuch"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Geschaeftsreise: nach Aktivitaet zurueck zum Abfahrtsort
+elseif pBE.Szenario = "Geschaeftsreise"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Urlaub: mehrere Tage mit Hotelrueckkehr
+elseif pBE.Szenario = "Urlaub"
+
+    if pBE.ReisePhase = "Urlaub_Tag1"
+
+        -- Nach Tag 1 zurueck ins Hotel
+        pBE.ReisePhase := "Urlaub_Nacht2"
+        pBE.Ziel := pBE.HotelZiel
+
+    elseif pBE.ReisePhase = "Urlaub_Tag2"
+
+        -- Nach Tag 2 zurueck ins Hotel
+        pBE.ReisePhase := "Urlaub_Nacht3"
+        pBE.Ziel := pBE.HotelZiel
+
+    elseif pBE.ReisePhase = "Urlaub_Tag3"
+
+        -- Nach Tag 3 Rueckfahrt
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+
+    else
+
+        -- Sicherheitsfall
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+
+    end
+
+else
+
+    -- Sicherheitsfall fuer unbekannte Szenarien
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+end
+
+-- ------------------------------------------------------------
+-- Transport fuer naechste Fahrt waehlen
+-- ------------------------------------------------------------
+
+TRANSPORT_WAEHLEN_V3(pBE)
+
+-- ------------------------------------------------------------
+-- Tracking aktualisieren
+-- ------------------------------------------------------------
+
+TRACKING_UPDATE_BE_V1(pBE, "", "wartet auf Weiterfahrt")
+
+-- ------------------------------------------------------------
+-- In passenden Puffer umlagern
+-- ------------------------------------------------------------
+
+ZUM_PUFFER_V3(pBE)

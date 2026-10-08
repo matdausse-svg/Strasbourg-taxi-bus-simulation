@@ -1,0 +1,21 @@
+-- Haelt ein Taxi an der roten Ampel an und laesst es bei Gruen weiterfahren
+
+param Kreuzung : integer, Horizontal : boolean
+
+if Horizontal = false
+    if Kreuzung_Tabelle[1, Kreuzung] = 1
+        @.stopped := true
+        while Kreuzung_Tabelle[1, Kreuzung] = 1
+            wait 1s
+        end
+        @.stopped := false
+    end
+else
+    if Kreuzung_Tabelle[1, Kreuzung] = 0
+        @.stopped := true
+        while Kreuzung_Tabelle[1, Kreuzung] = 0
+            wait 1s
+        end
+        @.stopped := false
+    end
+end

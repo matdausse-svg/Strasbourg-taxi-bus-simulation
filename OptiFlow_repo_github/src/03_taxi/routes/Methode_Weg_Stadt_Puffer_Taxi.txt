@@ -1,0 +1,13 @@
+-- Sensor auf Weg_Stadt_Puffer_Taxi
+-- Taxi faehrt sofort weiter wenn Puffer leer
+
+if @.Zielort = Weg_Stadt_Puffer_Taxi
+    if not @.belegt
+        if Puffer_Taxi_Stadt.belegt
+            BELADEN_TAXI_V2
+        else
+            @.Rueckfahrt := void
+            PUFFER_WAHLEN_V2
+        end
+    end
+end

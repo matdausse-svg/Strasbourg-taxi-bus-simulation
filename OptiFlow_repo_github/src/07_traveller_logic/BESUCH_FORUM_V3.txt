@@ -1,0 +1,139 @@
+-- ============================================================
+-- BESUCH_FORUM_V3: BESUCH_FORUM_V3
+-- Aufenthalt im Forum
+-- Danach je nach Szenario:
+-- Tagesbesuch      -> Rueckfahrt
+-- Geschaeftsreise  -> Rueckfahrt
+-- Urlaub Tag 1/2   -> zurueck Hotel
+-- Urlaub Tag 3     -> Rueckfahrt
+-- FFA              -> Rueckfahrt
+-- Klasse_FFA       -> Rueckfahrt
+-- ============================================================
+
+var pBE : object
+pBE := @
+
+var dauerStunden : real
+
+-- ------------------------------------------------------------
+-- Ankunft im Forum tracken
+-- ------------------------------------------------------------
+
+-- pBE.AktuellerOrt := "Forum"
+TRACKING_UPDATE_BE_V1(pBE, "Forum", "besucht Forum")
+
+-- ------------------------------------------------------------
+-- Besuchsdauer bestimmen
+-- ------------------------------------------------------------
+
+if pBE.Szenario = "Tagesbesuch"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 2, 4)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Geschaeftsreise"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 3, 5)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Urlaub"
+    if pBE.ReisePhase = "Urlaub_Tag1"
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 2, 4)
+        dauerStunden := DauerAktuell_Global
+    elseif pBE.ReisePhase = "Urlaub_Tag2"
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 3, 5)
+        dauerStunden := DauerAktuell_Global
+    elseif pBE.ReisePhase = "Urlaub_Tag3"
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 2, 4)
+        dauerStunden := DauerAktuell_Global
+    else
+        DAUER_LESEN_V1(pBE.Gruppe_Nummer, 2, 4)
+        dauerStunden := DauerAktuell_Global
+    end
+elseif pBE.Szenario = "FFA"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 7)
+    dauerStunden := DauerAktuell_Global
+elseif pBE.Szenario = "Klasse_FFA"
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 4, 6)
+    dauerStunden := DauerAktuell_Global
+else
+    DAUER_LESEN_V1(pBE.Gruppe_Nummer, 2, 4)
+    dauerStunden := DauerAktuell_Global
+end
+wait dauerStunden * 3600
+
+-- ------------------------------------------------------------
+-- Nach dem Forum: naechstes Ziel bestimmen
+-- ------------------------------------------------------------
+
+-- Tagesbesuch: nach Forum direkt Rueckfahrt
+if pBE.Szenario = "Tagesbesuch"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Geschaeftsreise: nach Aktivitaet Rueckfahrt
+elseif pBE.Szenario = "Geschaeftsreise"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Urlaub: nach Tag 1/2 zurueck Hotel, nach Tag 3 Rueckfahrt
+elseif pBE.Szenario = "Urlaub"
+
+    if pBE.ReisePhase = "Urlaub_Tag1"
+
+        pBE.ReisePhase := "Urlaub_Nacht2"
+        pBE.Ziel := pBE.HotelZiel
+
+    elseif pBE.ReisePhase = "Urlaub_Tag2"
+
+        pBE.ReisePhase := "Urlaub_Nacht3"
+        pBE.Ziel := pBE.HotelZiel
+
+    elseif pBE.ReisePhase = "Urlaub_Tag3"
+
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+
+    else
+
+        -- Sicherheitsfall
+        pBE.ReisePhase := "Rueckfahrt"
+        pBE.Ziel := pBE.Abfahrtsort
+
+    end
+
+-- FFA Studenten fahren nach dem Forum zurueck
+elseif pBE.Szenario = "FFA"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+-- Klasse FFA faehrt nach dem Forum zurueck
+elseif pBE.Szenario = "Klasse_FFA"
+
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+else
+
+    -- Sicherheitsfall
+    pBE.ReisePhase := "Rueckfahrt"
+    pBE.Ziel := pBE.Abfahrtsort
+
+end
+
+-- ------------------------------------------------------------
+-- Transport fuer naechste Fahrt waehlen
+-- ------------------------------------------------------------
+
+TRANSPORT_WAEHLEN_V3(pBE)
+
+-- ------------------------------------------------------------
+-- Tracking aktualisieren
+-- ------------------------------------------------------------
+
+TRACKING_UPDATE_BE_V1(pBE, "", "wartet auf Weiterfahrt")
+
+-- ------------------------------------------------------------
+-- In passenden Puffer umlagern
+-- ------------------------------------------------------------
+
+ZUM_PUFFER_V3(pBE)
